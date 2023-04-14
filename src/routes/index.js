@@ -21,7 +21,7 @@ router.get('/healthcheck', function (req, res) {
     console.log('healthcheck: ', time, message);
 })
 
-router.post('/story/user/response', userReply);
+router.post('/story/user/reply', userReply);
 
 
 export default router;
