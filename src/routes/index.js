@@ -1,5 +1,9 @@
 import { Router } from 'express';
 
+import {
+    userReply
+} from '../controllers/story.js';
+
 var router = Router();
 
 router.get('/healthcheck', function (req, res) {
@@ -16,6 +20,8 @@ router.get('/healthcheck', function (req, res) {
     }
     console.log('healthcheck: ', time, message);
 })
+
+router.post('/story/user/response', userReply);
 
 
 export default router;
