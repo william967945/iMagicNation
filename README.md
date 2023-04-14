@@ -1,1 +1,1 @@
-# iMagicNation
+# iMagicNation Backend API
