@@ -1,35 +1,38 @@
 import { Configuration, OpenAIApi } from "openai";
 import * as dotenv from 'dotenv' // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+import { or } from "sequelize";
 
 dotenv.config();
-
-const configuration = new Configuration({
-    organization: "org-O0J27zQrydIuKDx8csuyhqgH",
-    apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
-
-// chat gpt
-// const completion = await openai.createChatCompletion({
-//     model: "gpt-3.5-turbo",
-//     messages: [{role: "user", content: "Hello world"}],
-//   });
-//   console.log(completion.data.choices[0].message);
-
-
-// dalle
-// const response = await openai.createImage({
-//     prompt: "奶奶在花園裡種花，弟弟也陪著她一起澆水",
-//     n: 1,
-//     size: "1024x1024",
-// });
-// const image_url = response.data.data[0].url;
-
-// console.log(image_url);
 
 
 const userReply = async (req, res) => {
     try {
+        // auth
+        let apiKey = req.headers.apikey;
+        let secret = req.headers.secret;
+        let openaiApiKey = req.headers.bearer;
+        console.log('apiKey: ', apiKey)
+        console.log('secret: ', secret)
+        console.log('openaiApiKey: ', openaiApiKey)
+        if (apiKey === 'S_202304140629871681424970') {
+            if (secret !== '7CEB8CF4BBAD69F6B67889B90F6474BAF542B4AD') {
+                res.json({
+                    "message": "Wrong secret!!"
+                })
+                res.status(400)
+                throw new Error('Wrong secret!!');
+                
+                
+            }
+        } else {
+            res.json({
+                "message": "No apiKey exist!!"
+            })
+            res.status(400)
+            throw new Error('No apiKey exist!!');
+        }
+
+
         // 接收使用者回覆
         let storyTitle = req.body.title;
         let userToken = req.body.token;
@@ -37,12 +40,18 @@ const userReply = async (req, res) => {
         let timestamp = req.body.timestamp;
 
         // call chatgpt api
+        const configuration = new Configuration({
+            organization: "org-O0J27zQrydIuKDx8csuyhqgH",
+            apiKey: openaiApiKey || process.env.OPENAI_API_KEY,
+        });
+        const openai = new OpenAIApi(configuration);
+
         const completion = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
             messages: [{ role: "user", content: `${reply}` }],
         });
         console.log(completion.data.choices[0].message);
-        
+
         // call dalle api
 
         let prompt = reply + ', cartoon, digital art, full hd, cutey'
