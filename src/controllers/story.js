@@ -4,7 +4,6 @@ import { or } from "sequelize";
 
 dotenv.config();
 
-
 const userReply = async (req, res) => {
     try {
         // auth
@@ -21,8 +20,6 @@ const userReply = async (req, res) => {
                 })
                 res.status(400)
                 throw new Error('Wrong secret!!');
-                
-                
             }
         } else {
             res.json({
