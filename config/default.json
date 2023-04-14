@@ -1,0 +1,11 @@
+{
+  "MySQL": {
+    "connectionLimit": 10,
+    "host": "",
+    "user": "",
+    "password": "",
+    "database": "",
+    "charset": "",
+    "multipleStatements": true
+  }
+}
