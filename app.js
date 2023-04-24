@@ -23,14 +23,14 @@ app.use(cors());
 app.use('/', indexRouter);
 // const seq = db;
 
-// const seq = new Sequelize('mysql://root:CtkHleNgIv3HoFOwmhyI@containers-us-west-51.railway.app:5738/railway') // Example for sqlite
+const seq = new Sequelize('mysql://root:dG5e8KdfhO2ZS4iFi8z1@containers-us-west-158.railway.app:6436/railway') // Example for sqlite
 
-// seq.authenticate().then(() => {
-//   console.log('Connection has been established sucessfully.');
-// }).catch((error) => {
-//   console.error('Unable to connect to the database: ', error);
-// });
-//
+seq.authenticate().then(() => {
+  console.log('Connection has been established sucessfully.');
+}).catch((error) => {
+  console.error('Unable to connect to the database: ', error);
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
   console.log("next-------------------------------------")
@@ -38,5 +38,5 @@ app.listen(port, () => {
 
 
 export default app;
-// export { seq };
+export { seq };
 
