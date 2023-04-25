@@ -25,7 +25,7 @@ app.use('/', indexRouter);
 app.use('/', userRouter);
 // const seq = db;
 
-const seq = new Sequelize('mysql://root:dG5e8KdfhO2ZS4iFi8z1@containers-us-west-158.railway.app:6436/railway') // Example for sqlite
+const seq = new Sequelize(process.env.MYSQL_URL) // Example for sqlite
 
 seq.authenticate().then(() => {
   console.log('Connection has been established sucessfully.');
