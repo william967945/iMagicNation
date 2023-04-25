@@ -1,4 +1,4 @@
-import config from "config";
+import config from 'config';
 import Sequelize from "sequelize";
 
 //FIXME: 建議使用config帶入MySQL連線設置
@@ -20,8 +20,8 @@ export default new Sequelize(
     host: "",
     dialect: "mysql",
     dialectOptions: {
-      charset: "utf8",
-      multipleStatements: true,
-    },
+      charset: 'utf8',
+      multipleStatements: true
+    }
   }
 );
