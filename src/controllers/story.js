@@ -100,43 +100,19 @@ const userReply = async (req, res) => {
                 VALUES 
                 ('${storyId}', '${userId}', '${reply}', '${chatgptResponse}', '${imageUrl}', '${nextRemainCount}', '${writeTs}')
             `);
-        } else {
-            // remainCount - 1 後 更新 reply, chatgptResponse, image
-            let curRemainCount = latestMessage[0].remainCount;
-            var nextRemainCount = curRemainCount - 1;
-            const [a, a1] = await seq.query(`
+    } else {
+      // remainCount - 1 後 更新 reply, chatgptResponse, image
+      let curRemainCount = latestMessage[0].remainCount;
+      var nextRemainCount = curRemainCount - 1;
+      const [a, a1] = await seq.query(`
                 INSERT INTO messages 
                 (storyId, userId, reply, chatgptResponse, image, remainCount, timestamp)
                 VALUES 
                 ('${storyId}', '${userId}', '${reply}', '${chatgptResponse}', '${imageUrl}', '${nextRemainCount}', '${writeTs}')
             `);
-        }
-
-        let responseTs = Math.floor(new Date().getTime() / 1000);
-        // generate response for api
-        const response = {
-            message: "ok",
-            remainCount: nextRemainCount,
-            storyId: `${storyId}`,
-            userId: `${userId}`,
-            chatGPTResponse: chatgptResponse,
-            // chatGPTResponse: "william維修中",
-            image: `${imageUrl}`,
-            // image: "william維修中",
-            timestamp: `${responseTs}`
-        }
-
-        console.log('response: ', response);
-
-        res.json(response)
-        res.status(200)
-    } catch (error) {
-        console.log(error);
-        console.log("ERROR!!");
-        res.send(error);
     }
 
-    let responseTs = new Date();
+    let responseTs = Math.floor(new Date().getTime() / 1000);
     // generate response for api
     const response = {
       message: "ok",
@@ -147,7 +123,7 @@ const userReply = async (req, res) => {
       // chatGPTResponse: "william維修中",
       image: `${imageUrl}`,
       // image: "william維修中",
-      timestamp: responseTs,
+      timestamp: `${responseTs}`,
     };
 
     console.log("response: ", response);
@@ -159,6 +135,25 @@ const userReply = async (req, res) => {
     console.log("ERROR!!");
     res.send(error);
   }
+
+  let responseTs = new Date();
+  // generate response for api
+  const response = {
+    message: "ok",
+    remainCount: nextRemainCount,
+    storyId: `${storyId}`,
+    userId: `${userId}`,
+    chatGPTResponse: chatgptResponse,
+    // chatGPTResponse: "william維修中",
+    image: `${imageUrl}`,
+    // image: "william維修中",
+    timestamp: responseTs,
+  };
+
+  console.log("response: ", response);
+
+  res.json(response);
+  res.status(200);
 };
 
 //
