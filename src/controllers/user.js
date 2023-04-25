@@ -10,9 +10,20 @@ const getUserbyUserId = async (req, res) => {
         const [userInfo, metadata] = await seq.query(`
             SELECT email
             FROM users
-            WHERE userId = '${userId}'
+            WHERE EXISTS (
+                SELECT * FROM users WHERE userId = ${userId}
+            ) 
+            AND
+            userId = ${userId}
         `);
         console.log('UserInfo: ', userInfo)
+
+        if (userInfo.length === 0) {
+            res.json({
+                message: 'No such userId !! Please select existing userId or add a new user.'
+            })
+        }
+
         let username = userInfo[0].email
 
         // generate response for api
@@ -45,13 +56,13 @@ const postUser = async (req, res) => {
         console.log('latestUserId: ', latestUserId)
 
         let nextUserId = (latestUserId[0].id + 1).toString()
-        
+
         let writeTs = Math.floor(new Date().getTime() / 1000);
         const [userInfo, metadata] = await seq.query(`
             INSERT INTO users
             (email, password, userId, timestamp)
             VALUES
-            ('${username}', '${username}}', '${nextUserId}', '${writeTs}')
+            ('${username}', '${username}', '${nextUserId}', '${writeTs}')
         `);
 
 
