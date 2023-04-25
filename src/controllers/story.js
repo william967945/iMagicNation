@@ -99,7 +99,6 @@ const userReply = async (req, res) => {
             // remainCount - 1 後 更新 reply, chatgptResponse, image
             let curRemainCount = latestMessage[0].remainCount;
             var nextRemainCount = curRemainCount - 1;
-            console.log('NOW IS HERE')
             const [a, a1] = await seq.query(`
                 INSERT INTO messages 
                 (storyId, userId, reply, chatgptResponse, image, remainCount, timestamp)
@@ -108,7 +107,7 @@ const userReply = async (req, res) => {
             `);
         }
 
-        let responseTs = new Date()
+        let responseTs = Math.floor(new Date().getTime() / 1000);
         // generate response for api
         const response = {
             message: "ok",
@@ -119,7 +118,7 @@ const userReply = async (req, res) => {
             // chatGPTResponse: "william維修中",
             image: `${imageUrl}`,
             // image: "william維修中",
-            timestamp: responseTs
+            timestamp: `${responseTs}`
         }
 
         console.log('response: ', response);
@@ -132,70 +131,69 @@ const userReply = async (req, res) => {
         res.send(error);
     }
 };
+
 //
-const getOrder = async (req, res) => {
-    const orderId = req.params.orderId;
-    console.log('orderId: ', orderId);
-    const [results, metadata] = await seq.query(`SELECT * from Orders WHERE orderId = ${orderId}`);
-    console.log('Orders list: ', results);
+// const getOrder = async (req, res) => {
+//     const orderId = req.params.orderId;
+//     console.log('orderId: ', orderId);
+//     const [results, metadata] = await seq.query(`SELECT * from Orders WHERE orderId = ${orderId}`);
+//     console.log('Orders list: ', results);
 
-    let finalItemArray = [];
-    let itemArray = results[0].itemId.split(':');
-    for (let i = 0; i < itemArray.length; i++) {
-        const [itemName, metadata2] = await seq.query(`SELECT * from Menu WHERE menuId = ${itemArray[i]}`);
-        let itemTitle = itemName[0].title;
-        console.log('itemName: ', itemTitle);
-        finalItemArray.push(itemTitle);
-    }
-    results[0].itemId = finalItemArray.toString();
-    const response = {
-        result: results,
-        message: 'OK'
-    }
-    try {
-        res.json(response)
-        res.status(200)
-    } catch (error) {
-        console.log(error);
-        console.log("ERROR!!");
-        res.send(error);
-    }
-};
+//     let finalItemArray = [];
+//     let itemArray = results[0].itemId.split(':');
+//     for (let i = 0; i < itemArray.length; i++) {
+//         const [itemName, metadata2] = await seq.query(`SELECT * from Menu WHERE menuId = ${itemArray[i]}`);
+//         let itemTitle = itemName[0].title;
+//         console.log('itemName: ', itemTitle);
+//         finalItemArray.push(itemTitle);
+//     }
+//     results[0].itemId = finalItemArray.toString();
+//     const response = {
+//         result: results,
+//         message: 'OK'
+//     }
+//     try {
+//         res.json(response)
+//         res.status(200)
+//     } catch (error) {
+//         console.log(error);
+//         console.log("ERROR!!");
+//         res.send(error);
+//     }
+// };
 
-const postOrder = async (req, res) => {
-    console.log('req data: ', req.body);
-    try {
-        let customerId = req.body.customer_id;
-        let amount = req.body.amount;
-        let mealType = req.body.mealType;
-        let paymentType = req.body.paymentType;
-        let itemId = req.body.itemId;
+// const postOrder = async (req, res) => {
+//     console.log('req data: ', req.body);
+//     try {
+//         let customerId = req.body.customer_id;
+//         let amount = req.body.amount;
+//         let mealType = req.body.mealType;
+//         let paymentType = req.body.paymentType;
+//         let itemId = req.body.itemId;
 
-        orderId++;
-        orderNumber++;
-        const [results, metadata] = await seq.query(`INSERT INTO Orders VALUES (${orderId},'accepted','${customerId}', '${amount}', '${mealType}','${paymentType}','${itemId}', '${orderNumber}')`);
-        console.log('Orders list: ', results);
-        const response = {
-            orderId: orderId.toString(),
-            orderNumber: orderNumber,
-            message: 'OK'
-        }
+//         orderId++;
+//         orderNumber++;
+//         const [results, metadata] = await seq.query(`INSERT INTO Orders VALUES (${orderId},'accepted','${customerId}', '${amount}', '${mealType}','${paymentType}','${itemId}', '${orderNumber}')`);
+//         console.log('Orders list: ', results);
+//         const response = {
+//             orderId: orderId.toString(),
+//             orderNumber: orderNumber,
+//             message: 'OK'
+//         }
 
-        res.json(response)
-        res.status(200)
-    } catch (error) {
-        console.log(error);
-        console.log("ERROR!!");
-        res.send(error);
-    }
-};
+//         res.json(response)
+//         res.status(200)
+//     } catch (error) {
+//         console.log(error);
+//         console.log("ERROR!!");
+//         res.send(error);
+//     }
+// };
 
 
 
 
 
 export {
-    userReply,
-    getOrder,
-    postOrder
+    userReply
 }
