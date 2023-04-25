@@ -7,6 +7,7 @@ import cors from 'cors';
 import axios from 'axios';
 
 import indexRouter from './src/routes/index.js';
+import userRouter from './src/routes/user.js';
 
 var app = express();
 
@@ -21,6 +22,7 @@ app.use(cookieParser());
 // app.use(express.static(join(__dirname, 'public')));
 app.use(cors());
 app.use('/', indexRouter);
+app.use('/', userRouter);
 // const seq = db;
 
 const seq = new Sequelize('mysql://root:dG5e8KdfhO2ZS4iFi8z1@containers-us-west-158.railway.app:6436/railway') // Example for sqlite
