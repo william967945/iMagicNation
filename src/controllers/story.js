@@ -79,7 +79,7 @@ const userReply = async (req, res) => {
             const [storyInitCount, metadata] = await seq.query(`
                 SELECT remainCount
                 FROM storys 
-                WHERE EXIST (
+                WHERE EXISTS (
                     SELECT * FROM storys WHERE storyId = ${storyId}
                 )
                 AND
