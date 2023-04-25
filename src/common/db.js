@@ -13,11 +13,11 @@ import Sequelize from "sequelize";
 // });
 
 export default new Sequelize(
-  "railway", // DB schema
-  "root", // DB username
-  "dG5e8KdfhO2ZS4iFi8z1",
+  "", // DB schema
+  "", // DB username
+  "", // DB password
   {
-    host: "containers-us-west-158.railway.app",
+    host: "",
     dialect: "mysql",
     dialectOptions: {
       charset: 'utf8',
