@@ -346,8 +346,6 @@ const postStoryProgressByUser = async (req, res) => {
 
 export {
   userReply,
-  getOrder,
-  postOrder,
   getAllStory,
   getStoryByTitleOrType,
   getStoryByStoryId,
