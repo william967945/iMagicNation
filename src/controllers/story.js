@@ -221,12 +221,12 @@ const getAllStory = async (req, res) => {
 };
 
 const getStoryByTitleOrType = async (req, res) => {
-  if (req.query.Title === undefined && req.query.Type === undefined) {
+  if (req.query.title === undefined && req.query.type === undefined) {
     res.send({ err: "invalid api" });
-  } else if (req.query.Title !== undefined) {
+  } else if (req.query.title !== undefined) {
     try {
       const [results, metadata] = await seq.query(
-        `SELECT * FROM storys WHERE title = '${req.query.Title}'`
+        `SELECT * FROM storys WHERE title = '${req.query.title}'`
       );
       res.status = 200;
       res.send(results);
