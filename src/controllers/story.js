@@ -281,11 +281,11 @@ const getStoryProgressByUser = async (req, res) => {
         var minCount = 10000;
         results.forEach((r) => {
           minCount = Math.min(r.remainCount, minCount);
-          r.message = "ok";
+        //   r.message = "ok";
           r.chatgptResponse = { content: r.chatgptResponse };
           delete r.id;
           delete r.storyId;
-          delete r.reply;
+        //   delete r.reply;
         });
 
         var resultTemplete = {
