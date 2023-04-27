@@ -313,7 +313,7 @@ const getStoryProgressByUser = async (req, res) => {
         var resultTemplete = {
           userId: req.query.userId,
           storyId: req.query.storyId,
-          remainCount: storyRes[0].remainConut,
+          remainCount: storyRes[0].remainCount,
           // message: storyRes[0],
           message: []
         };
