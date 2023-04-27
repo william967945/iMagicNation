@@ -307,14 +307,15 @@ const getStoryProgressByUser = async (req, res) => {
         delete storyRes[0].type;
         delete storyRes[0].meaning;
         delete storyRes[0].words;
-        storyRes[0].message = "ok";
-        storyRes[0].image = { default: storyRes[0].initImage };
-        delete storyRes[0].initImage;
+        // storyRes[0].message = "ok";
+        // storyRes[0].image = { default: storyRes[0].initImage };
+        // delete storyRes[0].initImage;
         var resultTemplete = {
           userId: req.query.userId,
           storyId: req.query.storyId,
           remainCount: storyRes[0].remainConut,
-          message: storyRes[0],
+          // message: storyRes[0],
+          message: []
         };
         res.send(resultTemplete);
       }
