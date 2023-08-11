@@ -2,6 +2,7 @@ import { seq } from '../../app.js';
 
 
 const getUserbyUserId = async (req, res) => {
+    // 1. 登入驗證DB
 
     let userId = req.query.userId
     console.log('req params: ', userId)
