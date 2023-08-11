@@ -7,6 +7,7 @@ import {
   getStoryByStoryId,
   getStoryProgressByUser,
   postStoryProgressByUser,
+  callChatGPT,
 } from "../controllers/story.js";
 
 var router = Router();
@@ -49,5 +50,8 @@ router.post("/story/progress", postStoryProgressByUser);
 
 // 使用者回答
 router.post("/story/user/reply", userReply);
+
+// Call ChatGPT
+router.post("/story/callchatgpt", callChatGPT);
 
 export default router;
