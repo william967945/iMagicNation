@@ -106,19 +106,18 @@ const callChatGPT = async (req, res) => {
             model: "gpt-3.5-turbo",
             messages: [
               { role: "system", content: "You are a first grade elementary teacher." },
-              // { role: "user", content: `${input}\n------------\n請根據上述的故事接續下去約50字的第一人稱故事，並根據故事提出一個決定主角行動的問題。` },
-              { role: "user", content: `${wholeStory}\n\n${input}\n------------\n請根據上述的劇情提出一個道德觀念題。` },
+              { role: "user", content: `${wholeStory}\n\n${input}\n------------\n請根據上述的劇情完成故事結尾並提出一個道德觀念題。` },
             ],
           });
           let endingQuestion = completion.data.choices[0].message.content;
 
-          let response = [
-            {
-              input: `${input}`,
-              reply: `${endingQuestion}`,
-              imageSrc: `Not yet`
-            }
-          ]
+          // let response = [
+          //   {
+          //     input: `${input}`,
+          //     reply: `${endingQuestion}`,
+          //     imageSrc: `Not yet`
+          //   }
+          // ]
 
           // 寫入 DB (input, reply, imageSrc, storyId, authorId)
           const [dbResult, metadata3] = await seq.query(`
@@ -127,16 +126,36 @@ const callChatGPT = async (req, res) => {
             `);
           console.log("DBresult: ", dbResult);
 
+          // 把之前的故事記錄全部抓出來
+          const [historyReply, metadata4] = await seq.query(`
+            SELECT input, reply, imageSrc
+            FROM messages
+            WHERE (authorId = ${userId} AND storyId = ${storyId})
+            `);
+          console.log("historyReply: ", historyReply);
+
+          // generate response for api
+          let response = historyReply;
+
           res.json(response);
           res.status(200);
         } else {
+          // messageCount >= 5
+
+          const [lastReply, metadata] = await seq.query(`
+            SELECT reply
+            FROM messages
+            WHERE authorId = ${userId} AND storyId = ${storyId} AND id = (SELECT MAX(id) FROM messages WHERE authorId = ${userId} AND storyId = ${storyId})
+            `);
+          console.log("lastReply: ", lastReply);
+          let previousReply = lastReply[0]['reply'];
+
           // 評分系統
           const completion = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
             messages: [
-              { role: "system", content: "You are a first grade elementary teacher." },
-              // { role: "user", content: `${input}\n------------\n請根據上述的故事接續下去約50字的第一人稱故事，並根據故事提出一個決定主角行動的問題。` },
-              { role: "user", content: `${input}\n------------\n請根據上述回答的文法、語句順暢度、道德觀念給出0到100之間的分數。` },
+              { role: "system", content: "You are a teacher in elementary school." },
+              { role: "user", content: `問題: ${previousReply}\n\n學生的回答: ${input}\n------------\n請依據"學生的回答"與"問題"的"相關性、契合度、完整性"給出0到100之間的分數並說明理由。格式如下:\n參考分數: <你的分數>\n參考評語: <你的評語>` },
             ],
           });
           console.log(completion.data.choices[0].message);
@@ -187,7 +206,7 @@ const callChatGPT = async (req, res) => {
           messages: [
             { role: "system", content: "You are a novelist." },
             // { role: "user", content: `${input}\n------------\n請根據上述的故事接續下去約50字的第一人稱故事，並根據故事提出一個決定主角行動的問題。` },
-            { role: "user", content: `"${previousReply}\n我:${input}"\n------------\n請根據上述的故事內容繼續發展50字的第二人稱文字冒險小說` },
+            { role: "user", content: `"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展50字的第二人稱文字冒險小說。` },
             // { role: "user", content: `"${previousReply}\n我:${input}"\n------------\n請根據上述的故事內容繼續發展50字的第二人稱文字冒險小說。須包含下列字詞: 「贊、範、臣、羞辱、賞賜、求饒」`},
           ],
         });
@@ -437,7 +456,7 @@ const getAllPrivateStory = async (req, res) => {
 }
 
 const getAllStory = async (req, res) => {
-  const [results, metadata] = await seq.query(`SELECT * from storys`);
+  const [results, metadata] = await seq.query(`SELECT * from stories`);
   res.status = 200;
   res.send(results);
 };
@@ -448,10 +467,15 @@ const getStoryByTitleOrType = async (req, res) => {
   } else if (req.query.title !== undefined) {
     try {
       const [results, metadata] = await seq.query(
-        `SELECT * FROM storys WHERE title = '${req.query.title}'`
+        `SELECT * FROM stories WHERE title = '${req.query.title}'`
       );
-      res.status = 200;
-      res.send(results);
+
+      if (results.length === 0) {
+        res.send({ err: `story not found. Title: ${req.query.title}` });
+      } else {
+        res.status = 200;
+        res.send(results);
+      }
     } catch (error) {
       console.log(error);
       console.log("ERROR!!");
@@ -460,10 +484,15 @@ const getStoryByTitleOrType = async (req, res) => {
   } else {
     try {
       const [results, metadata] = await seq.query(
-        `SELECT * FROM storys WHERE type='${req.query.Type}'`
+        `SELECT * FROM stories WHERE type='${req.query.type}'`
       );
-      res.status = 200;
-      res.send(results);
+
+      if (results.length === 0) {
+        res.send({ err: `story not found. Type: ${req.query.type}` });
+      } else {
+        res.status = 200;
+        res.send(results);
+      }
     } catch (error) {
       console.log(error);
       console.log("ERROR!!");
@@ -478,10 +507,16 @@ const getStoryByStoryId = async (req, res) => {
   } else {
     try {
       const [results, metadata] = await seq.query(
-        `SELECT * FROM storys WHERE storyId = '${req.query.storyId}'`
+        `SELECT * FROM stories WHERE id = '${req.query.storyId}'`
       );
-      res.status = 200;
-      res.send(results);
+
+      if (results.length === 0) {
+        res.send({ err: `story not found. storyId: ${req.query.storyId}` });
+      } else {
+        res.status = 200;
+        res.send(results);
+      }
+
     } catch (error) {
       console.log(error);
       console.log("ERROR!!");
@@ -490,62 +525,28 @@ const getStoryByStoryId = async (req, res) => {
   }
 };
 
-const getStoryProgressByUser = async (req, res) => {
-  if (req.query.storyId === undefined && req.query.userId === undefined) {
-    res.send({ err: "invalid api" });
-  } else {
-    try {
-      const [results, metadata] = await seq.query(
-        `SELECT * FROM messages WHERE storyId = '${req.query.storyId}' AND userId = '${req.query.userId}'`
-      );
-      if (results.length > 0) {
-        res.status = 200;
-        var minCount = 10000;
-        results.forEach((r) => {
-          minCount = Math.min(r.remainCount, minCount);
-          //   r.message = "ok";
-          r.chatgptResponse = { content: r.chatgptResponse };
-          delete r.id;
-          delete r.storyId;
-          //   delete r.reply;
-        });
+const getStoryProgress = async (req, res) => {
+  try {
+    let storyId = req.body.storyId;
+    let userId = req.body.userId;
+    console.log('-----');
+    console.log(storyId);
+    console.log(userId);
+    console.log('-----');
 
-        var resultTemplete = {
-          userId: req.query.userId,
-          storyId: req.query.storyId,
-          remainCount: minCount,
-          message: results,
-        };
-        res.send(resultTemplete);
-      } else {
-        res.status = 200;
-        const [storyRes, metastoryRes] = await seq.query(
-          `SELECT * FROM storys WHERE storyId = '${req.query.storyId}'`
-        );
+    const [storyProgress, metadata] = await seq.query(`
+      SELECT input, reply
+      FROM messages
+      WHERE (authorId = ${userId} AND storyId = ${storyId})
+    `);
+    console.log("storyProgress: ", storyProgress);
 
-        delete storyRes[0].id;
-        delete storyRes[0].letters;
-        delete storyRes[0].phrases;
-        delete storyRes[0].type;
-        delete storyRes[0].meaning;
-        delete storyRes[0].words;
-        // storyRes[0].message = "ok";
-        // storyRes[0].image = { default: storyRes[0].initImage };
-        // delete storyRes[0].initImage;
-        var resultTemplete = {
-          userId: req.query.userId,
-          storyId: req.query.storyId,
-          remainCount: storyRes[0].remainCount,
-          // message: storyRes[0],
-          message: []
-        };
-        res.send(resultTemplete);
-      }
-    } catch (error) {
-      console.log(error);
-      console.log("ERROR!!");
-      res.send(error);
-    }
+    // let rowDeleted = result.affectedRows;
+    res.send(storyProgress);
+  } catch (error) {
+    console.log(error);
+    console.log("ERROR!!");
+    res.send(error);
   }
 };
 
@@ -567,12 +568,53 @@ const postStoryProgressByUser = async (req, res) => {
   }
 };
 
+const resetStory = async (req, res) => {
+  try {
+    let storyId = req.body.storyId;
+    let userId = req.body.userId;
+    console.log('-----');
+    console.log(storyId);
+    console.log(userId);
+    console.log('-----');
+
+    const [result, metadata] = await seq.query(`
+            DELETE FROM messages
+            WHERE (authorId = ${userId} AND storyId = ${storyId})
+            `);
+    console.log("Result: ", result);
+
+    let rowDeleted = result.affectedRows;
+
+    if (rowDeleted === 0) {
+      res.send({
+        err: "No message deleted.",
+        storyId: `${storyId}`,
+        userId: `${userId}`
+      })
+    } else {
+      res.send({
+        deletedRows: `${rowDeleted}`,
+        storyId: `${storyId}`,
+        userId: `${userId}`
+      })
+    }
+
+  } catch (error) {
+    console.log(error);
+    console.log("ERROR!!");
+    res.send(error);
+  }
+
+
+};
+
 export {
   callChatGPT,
   userReply,
   getAllStory,
   getStoryByTitleOrType,
   getStoryByStoryId,
-  getStoryProgressByUser,
+  getStoryProgress,
   postStoryProgressByUser,
+  resetStory
 };
