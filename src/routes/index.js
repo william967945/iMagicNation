@@ -5,9 +5,10 @@ import {
   getAllStory,
   getStoryByTitleOrType,
   getStoryByStoryId,
-  getStoryProgressByUser,
+  getStoryProgress,
   postStoryProgressByUser,
   callChatGPT,
+  resetStory
 } from "../controllers/story.js";
 
 var router = Router();
@@ -44,14 +45,17 @@ router.get("/story/one", getStoryByStoryId);
 // });
 
 // GET 使用者故事進度
-router.get("/story/progress", getStoryProgressByUser);
+router.get("/story/progress", getStoryProgress);
 // POST 使用者故事進度
-router.post("/story/progress", postStoryProgressByUser);
+// router.post("/story/progress", postStoryProgressByUser);
 
 // 使用者回答
-router.post("/story/user/reply", userReply);
+// router.post("/story/user/reply", userReply);
 
 // Call ChatGPT
 router.post("/story/callchatgpt", callChatGPT);
+
+// 故事重置
+router.post("/story/reset", resetStory);
 
 export default router;
