@@ -220,7 +220,7 @@ const callChatGPT = async (req, res) => {
             { role: "system", content: "You are a DALL-E prompt engineer." },
             // { role: "user", content: `${chatgptResponse}\n------------\n"Please describe an illustration for the paragraph above"`}
             // { role: "user", content: `${chatgptResponse}\n------------\n"Provide a short (<10 token) but precise description of what this image looks like, only include the necessary nouns and verbs, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like."` }
-            { role: "user", content: `${chatgptResponse}\n------------\n"Provide serveral prompt words of what this image looks like, only include the necessary nouns and verb, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like."` }
+            { role: "user", content: `${chatgptResponse}\n------------\n"Please use a short sentence to describe what this image looks like, only include the necessary nouns and verb, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like."` }
             // { role: "user", content: `"${chatgptResponse}"\n------------\nSummarize the story's character, appearance, general illustration style, and setting in a sentence of up to 20 words.`}
           ],
         });
