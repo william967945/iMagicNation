@@ -246,7 +246,9 @@ const callChatGPT = async (req, res) => {
         //   "\ncartoon-style, digital art, cutey, picture book, hand-drawn picture, pastel-style picture";
         // let prompt = dallePrompt + "\ncartoon-style, digital art, cutey, picture book, hand-drawn picture, pastel-style picture";
         // let prompt =  + dallePrompt + ", digital art, full hd";
-        let prompt = "The pixel art of " + dallePrompt + ", pixel art, cute";
+        
+        // let prompt = "The pixel art of " + dallePrompt + ", pixel art, cute";
+        let prompt = "The pixel art of " + dallePrompt + ", Pixel Art, 8-bit Art, Pixelized Style, minecraft";
 
         // DALL-E
         const imageResult = await openai.createImage({
