@@ -41,7 +41,7 @@ const callChatGPT = async (req, res) => {
     const [latestMessage, metadata] = await seq.query(`
             SELECT COUNT(id)
             FROM messages
-            WHERE (authorId = ${userId} AND storyId = ${storyId})
+            WHERE (authorId = '${userId}' AND storyId = '${storyId}')
             `);
     console.log("Count: ", latestMessage);
 
@@ -93,7 +93,7 @@ const callChatGPT = async (req, res) => {
           const [wholeMessage, metadata2] = await seq.query(`
               SELECT input, reply
               FROM messages
-              WHERE (authorId = ${userId} AND storyId = ${storyId})
+              WHERE (authorId = '${userId}' AND storyId = ${storyId})
               `);
           let concatenatedText = '';
           for (const item of wholeMessage) {
@@ -130,7 +130,7 @@ const callChatGPT = async (req, res) => {
           const [historyReply, metadata4] = await seq.query(`
             SELECT input, reply, imageSrc
             FROM messages
-            WHERE (authorId = ${userId} AND storyId = ${storyId})
+            WHERE (authorId = '${userId}' AND storyId = ${storyId})
             `);
           console.log("historyReply: ", historyReply);
 
@@ -145,7 +145,7 @@ const callChatGPT = async (req, res) => {
           const [lastReply, metadata] = await seq.query(`
             SELECT reply
             FROM messages
-            WHERE authorId = ${userId} AND storyId = ${storyId} AND id = (SELECT MAX(id) FROM messages WHERE authorId = ${userId} AND storyId = ${storyId})
+            WHERE authorId = '${userId}' AND storyId = ${storyId} AND id = (SELECT MAX(id) FROM messages WHERE authorId = '${userId}' AND storyId = ${storyId})
             `);
           console.log("lastReply: ", lastReply);
           let previousReply = lastReply[0]['reply'];
@@ -195,7 +195,7 @@ const callChatGPT = async (req, res) => {
           const [lastReply, metadata] = await seq.query(`
             SELECT reply
             FROM messages
-            WHERE authorId = ${userId} AND storyId = ${storyId} AND id = (SELECT MAX(id) FROM messages WHERE authorId = ${userId} AND storyId = ${storyId})
+            WHERE authorId = '${userId}' AND storyId = ${storyId} AND id = (SELECT MAX(id) FROM messages WHERE authorId = '${userId}' AND storyId = ${storyId})
             `);
           console.log("lastReply: ", lastReply);
           previousReply = lastReply[0]['reply'];
@@ -270,7 +270,7 @@ const callChatGPT = async (req, res) => {
         const [historyReply, metadata2] = await seq.query(`
             SELECT input, reply, imageSrc
             FROM messages
-            WHERE (authorId = ${userId} AND storyId = ${storyId})
+            WHERE (authorId = '${userId}' AND storyId = ${storyId})
             `);
         console.log("historyReply: ", historyReply);
 
@@ -537,7 +537,7 @@ const getStoryProgress = async (req, res) => {
     const [storyProgress, metadata] = await seq.query(`
       SELECT input, reply
       FROM messages
-      WHERE (authorId = ${userId} AND storyId = ${storyId})
+      WHERE (authorId = '${userId}' AND storyId = ${storyId})
     `);
     console.log("storyProgress: ", storyProgress);
 
@@ -579,7 +579,7 @@ const resetStory = async (req, res) => {
 
     const [result, metadata] = await seq.query(`
             DELETE FROM messages
-            WHERE (authorId = ${userId} AND storyId = ${storyId})
+            WHERE (authorId = '${userId}' AND storyId = ${storyId})
             `);
     console.log("Result: ", result);
 
