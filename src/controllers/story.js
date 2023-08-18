@@ -220,7 +220,7 @@ const callChatGPT = async (req, res) => {
             { role: "system", content: "You are a DALL-E prompt engineer." },
             // { role: "user", content: `${chatgptResponse}\n------------\n"Please describe an illustration for the paragraph above"`}
             // { role: "user", content: `${chatgptResponse}\n------------\n"Provide a short (<10 token) but precise description of what this image looks like, only include the necessary nouns and verbs, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like."` }
-            { role: "user", content: `${chatgptResponse}\n------------\n"Please use a short sentence to describe what this image looks like, only include the necessary nouns, verbs, place and event, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like."` }
+            { role: "user", content: `${chatgptResponse}\n------------\n"Please use a short sentence to describe what this image looks like, only include the necessary nouns, verbs, place and event, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide in a sentence."` }
             // { role: "user", content: `"${chatgptResponse}"\n------------\nSummarize the story's character, appearance, general illustration style, and setting in a sentence of up to 20 words.`}
           ],
         });
@@ -249,7 +249,7 @@ const callChatGPT = async (req, res) => {
         // let prompt =  + dallePrompt + ", digital art, full hd";
         
         // let prompt = "The pixel art of " + dallePrompt + ", pixel art, cute";
-        let prompt = "The pixel art of " + dallePrompt + ", Pixel Art, 8-bit Art, Pixelized Style, minecraft";
+        let prompt = "The pixel art of " + dallePrompt + ", Pixel Art, 32-bit Pixel Art, 32-bit Art, Pixelized Style, minecraft";
 
         // DALL-E
         const imageResult = await openai.createImage({
