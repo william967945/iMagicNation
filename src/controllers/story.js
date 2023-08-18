@@ -103,7 +103,7 @@ const callChatGPT = async (req, res) => {
           console.log(wholeStory);
 
           const completion = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4",
             messages: [
               { role: "system", content: "You are a first grade elementary teacher." },
               { role: "user", content: `${wholeStory}\n\n${input}\n------------\n請根據上述的劇情完成故事結尾並提出一個道德觀念題。` },
@@ -152,7 +152,7 @@ const callChatGPT = async (req, res) => {
 
           // 評分系統
           const completion = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4",
             messages: [
               { role: "system", content: "You are a teacher in elementary school." },
               { role: "user", content: `問題: ${previousReply}\n\n學生的回答: ${input}\n------------\n請依據"學生的回答"與"問題"的"相關性、契合度、完整性"給出0到100之間的分數並說明理由。格式如下:\n參考分數: <你的分數>\n參考評語: <你的評語>` },
@@ -202,7 +202,7 @@ const callChatGPT = async (req, res) => {
         }
 
         const completion = await openai.createChatCompletion({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4",
           messages: [
             { role: "system", content: "You are a novelist." },
             // { role: "user", content: `${input}\n------------\n請根據上述的故事接續下去約50字的第一人稱故事，並根據故事提出一個決定主角行動的問題。` },
@@ -215,7 +215,7 @@ const callChatGPT = async (req, res) => {
 
         // 取關鍵字
         const completion2 = await openai.createChatCompletion({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4",
           messages: [
             { role: "system", content: "You are a DALL-E prompt engineer." },
             // { role: "user", content: `${chatgptResponse}\n------------\n"Please describe an illustration for the paragraph above"`}
