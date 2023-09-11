@@ -8,7 +8,9 @@ import {
   getStoryProgress,
   postStoryProgressByUser,
   callChatGPT,
-  resetStory
+  resetStory,
+  dallePromptTest,
+  scoreTest
 } from "../controllers/story.js";
 
 var router = Router();
@@ -58,4 +60,9 @@ router.post("/story/callchatgpt", callChatGPT);
 // 故事重置
 router.post("/story/reset", resetStory);
 
+// Dalle prompt圖片測試
+router.post("/dalle/test", dallePromptTest)
+
+// 評分系統測試
+router.post("/score/test", scoreTest)
 export default router;
