@@ -25,7 +25,6 @@ const callChatGPT = async (req, res) => {
       Call ChatGPT -> Dalle
       ChatGPT 的 reply, Dalle 的 imageSrc 寫到 DB 
       回傳所有 input, reply
-  
       [
         {
           "input": "message1",
@@ -36,7 +35,6 @@ const callChatGPT = async (req, res) => {
           "reply": "reply2"
         }
       ]
-
     */
     const [latestMessage, metadata] = await seq.query(`
             SELECT COUNT(id)
@@ -111,18 +109,35 @@ const callChatGPT = async (req, res) => {
           });
           let endingQuestion = completion.data.choices[0].message.content;
 
-          // let response = [
-          //   {
-          //     input: `${input}`,
-          //     reply: `${endingQuestion}`,
-          //     imageSrc: `Not yet`
-          //   }
-          // ]
+          // 取關鍵字
+          const completion2 = await openai.createChatCompletion({
+            model: "gpt-4",
+            messages: [
+              { role: "system", content: "You are a DALL-E prompt engineer." },
+              { role: "user", content: `${endingQuestion}\n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."` }
+            ],
+          });
+          console.log(completion2.data.choices[0].message);
+          let dallePrompt = completion2.data.choices[0].message.content;
+          console.log('dallePrompt:', dallePrompt);
+
+          let prompt = dallePrompt + ", pixel art, Detailed pixel art, 128-bit Pixel Art, 128-bit Art, Pixelized Style, minecraft";
+
+          // DALL-E
+          const imageResult = await openai.createImage({
+            prompt: `${prompt}`,
+            n: 1,
+            size: "1024x1024",
+            response_format: "url"
+          });
+          let imageUrl = imageResult.data.data[0].url;
+          console.log('imageUrl: ', imageUrl);
+
 
           // 寫入 DB (input, reply, imageSrc, storyId, authorId)
           const [dbResult, metadata3] = await seq.query(`
-            INSERT INTO messages (input, reply, storyId, authorId)
-            VALUES ('${input}', '${endingQuestion}', '${storyId}', '${userId}')
+            INSERT INTO messages (input, reply, imageSrc, storyId, authorId)
+            VALUES ('${input}', '${endingQuestion}', '${imageUrl}', '${storyId}', '${userId}')
             `);
           console.log("DBresult: ", dbResult);
 
@@ -140,7 +155,7 @@ const callChatGPT = async (req, res) => {
           res.json(response);
           res.status(200);
         } else {
-          // messageCount >= 5
+          // messageCount >= 5, 觸發評分系統
 
           const [lastReply, metadata] = await seq.query(`
             SELECT reply
@@ -161,11 +176,37 @@ const callChatGPT = async (req, res) => {
           console.log(completion.data.choices[0].message);
           let finalScore = completion.data.choices[0].message.content;
 
+
+          // 取關鍵字
+          const completion2 = await openai.createChatCompletion({
+            model: "gpt-4",
+            messages: [
+              { role: "system", content: "You are a DALL-E prompt engineer." },
+              { role: "user", content: `${finalScore}\n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."` }
+            ],
+          });
+          console.log(completion2.data.choices[0].message);
+          let dallePrompt = completion2.data.choices[0].message.content;
+          console.log('dallePrompt:', dallePrompt);
+
+          let prompt = dallePrompt + ", pixel art, Detailed pixel art, 128-bit Pixel Art, 128-bit Art, Pixelized Style, minecraft";
+
+          // DALL-E
+          const imageResult = await openai.createImage({
+            prompt: `${prompt}`,
+            n: 1,
+            size: "1024x1024",
+            response_format: "url"
+          });
+          let imageUrl = imageResult.data.data[0].url;
+          console.log('imageUrl: ', imageUrl);
+
+
           let response = [
             {
               input: `${input}`,
               reply: `${finalScore}`,
-              imageSrc: `Not yet`
+              imageSrc: `${imageUrl}`
             }
           ]
 
@@ -205,7 +246,6 @@ const callChatGPT = async (req, res) => {
           model: "gpt-4",
           messages: [
             { role: "system", content: "You are a novelist." },
-            // { role: "user", content: `${input}\n------------\n請根據上述的故事接續下去約50字的第一人稱故事，並根據故事提出一個決定主角行動的問題。` },
             { role: "user", content: `"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展50字的第二人稱文字冒險小說。` },
             // { role: "user", content: `"${previousReply}\n我:${input}"\n------------\n請根據上述的故事內容繼續發展50字的第二人稱文字冒險小說。須包含下列字詞: 「贊、範、臣、羞辱、賞賜、求饒」`},
           ],
@@ -247,9 +287,9 @@ const callChatGPT = async (req, res) => {
         //   "\ncartoon-style, digital art, cutey, picture book, hand-drawn picture, pastel-style picture";
         // let prompt = dallePrompt + "\ncartoon-style, digital art, cutey, picture book, hand-drawn picture, pastel-style picture";
         // let prompt =  + dallePrompt + ", digital art, full hd";
-        
+
         // let prompt = "The pixel art of " + dallePrompt + ", pixel art, cute";
-        let prompt = dallePrompt + ", Pixel Art, 32-bit Pixel Art, 32-bit Art, Pixelized Style, minecraft";
+        let prompt = dallePrompt + ", pixel art, Detailed pixel art, 128-bit Pixel Art, 128-bit Art, Pixelized Style, minecraft";
 
         // DALL-E
         const imageResult = await openai.createImage({
@@ -607,9 +647,101 @@ const resetStory = async (req, res) => {
     console.log("ERROR!!");
     res.send(error);
   }
-
-
 };
+
+const dallePromptTest = async (req, res) => {
+  try {
+    let openaiApiKey = req.headers.bearer;
+    let input = req.body.input;
+
+
+    // call chatgpt api
+    const configuration = new Configuration({
+      organization: "org-O0J27zQrydIuKDx8csuyhqgH",
+      apiKey: openaiApiKey || process.env.OPENAI_API_KEY,
+    });
+    const openai = new OpenAIApi(configuration);
+
+    // 取關鍵字
+    const completion2 = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "You are a DALL-E prompt engineer." },
+        { role: "user", content: `${input}\n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."` }
+      ],
+    });
+    console.log(completion2.data.choices[0].message);
+    let dallePrompt = completion2.data.choices[0].message.content;
+    console.log('dallePrompt:', dallePrompt);
+
+    let prompt = dallePrompt + ", pixel art, Detailed pixel art, 128-bit Pixel Art, 128-bit Art, Pixelized Style, minecraft";
+
+    // DALL-E
+    const imageResult = await openai.createImage({
+      prompt: `${prompt}`,
+      n: 1,
+      size: "1024x1024",
+      response_format: "url"
+    });
+    let imageUrl = imageResult.data.data[0].url;
+    console.log('imageUrl: ', imageUrl);
+
+    let response = [
+      {
+        input: `${input}`,
+        imageSrc: `${imageUrl}`
+      }
+    ]
+    res.json(response);
+    res.status(200);
+  } catch (error) {
+    console.log(error);
+    console.log("ERROR!!");
+    res.send(error);
+  }
+};
+
+
+const scoreTest = async (req, res) => {
+  try {
+    let openaiApiKey = req.headers.bearer;
+    let input = req.body.input;
+    let question = req.body.question;
+
+    // call chatgpt api
+    const configuration = new Configuration({
+      organization: "org-O0J27zQrydIuKDx8csuyhqgH",
+      apiKey: openaiApiKey || process.env.OPENAI_API_KEY,
+    });
+    const openai = new OpenAIApi(configuration);
+
+    // 評分系統
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "You are a teacher in elementary school." },
+        { role: "user", content: `問題: ${question}\n\n學生的回答: ${input}\n------------\n請依據"學生的回答"與"問題"的"相關性、契合度、完整性"給出0到100之間的分數並說明理由。格式如下:\n參考分數: <你的分數>\n參考評語: <你的評語>` },
+      ],
+    });
+    console.log(completion.data.choices[0].message);
+    let finalScore = completion.data.choices[0].message.content;
+
+    let response = [
+      {
+        question: `${question}`,
+        input: `${input}`,
+        reply: `${finalScore}`
+      }
+    ]
+    res.json(response);
+    res.status(200);
+  } catch (error) {
+    console.log(error);
+    console.log("ERROR!!");
+    res.send(error);
+  }
+}
+
 
 export {
   callChatGPT,
@@ -619,5 +751,7 @@ export {
   getStoryByStoryId,
   getStoryProgress,
   postStoryProgressByUser,
-  resetStory
+  resetStory,
+  dallePromptTest,
+  scoreTest
 };
