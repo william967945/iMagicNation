@@ -212,8 +212,8 @@ const callChatGPT = async (req, res) => {
 
           // 寫入 DB (input, reply, imageSrc, storyId, authorId)
           const [dbResult, metadata3] = await seq.query(`
-            INSERT INTO messages (input, reply, storyId, authorId)
-            VALUES ('${input}', '${finalScore}', '${storyId}', '${userId}')
+            INSERT INTO messages (input, reply, imageSrc, storyId, authorId)
+            VALUES ('${input}', '${finalScore}', '${imageUrl}', '${storyId}', '${userId}')
             `);
           console.log("DBresult: ", dbResult);
 
