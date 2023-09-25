@@ -25,13 +25,13 @@ app.use("/", indexRouter);
 // app.use("/", userRouter);
 // const seq = db;
 
-// const seq = new Sequelize(process.env.MYSQL_URL); // Example for sqlite
+const seq = new Sequelize(process.env.MYSQL_URL); // Example for sqlite
 
-const seq = new Sequelize(process.env.MYSQLDATABASE, process.env.MYSQLUSER, process.env.MYSQLPASSWORD, {
-  host: process.env.MYSQLHOST,
-  port: process.env.MYSQLPORT,
-  dialect: 'mysql',
-});
+// const seq = new Sequelize(process.env.MYSQLDATABASE, process.env.MYSQLUSER, process.env.MYSQLPASSWORD, {
+//   host: process.env.MYSQLHOST,
+//   port: process.env.MYSQLPORT,
+//   dialect: 'mysql',
+// });
 
 seq
   .authenticate()
