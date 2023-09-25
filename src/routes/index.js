@@ -11,6 +11,7 @@ import {
   dallePromptTest,
   scoreTest
 } from "../controllers/story.js";
+import { getBlobImage } from "../controllers/utils.js";
 
 var router = Router();
 
@@ -61,6 +62,9 @@ router.post("/story/reset", resetStory);
 
 // Dalle prompt圖片測試
 router.post("/dalle/test", dallePromptTest)
+
+// 取出 Blob 圖片
+router.get("/dalle/blob", getBlobImage)
 
 // 評分系統測試
 router.post("/score/test", scoreTest)
