@@ -1,6 +1,11 @@
 import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
-import { seq } from "../../app.js";
 import axios from "axios";
+
+import { Blob } from "buffer";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getAuth, signInAnonymously } from "firebase/auth";
+import { seq } from "../../app.js";
+
 
 
 dotenv.config();
@@ -26,7 +31,7 @@ async function dalle(prompt, openai) {
     const imageResult = await openai.createImage({
         prompt: prompt,
         n: 1,
-        size: "1024x1024",
+        size: "512x512",
         response_format: "url"
     });
     let imageUrl = imageResult.data.data[0].url;
@@ -53,6 +58,45 @@ async function downloadImageToBuffer(url) {
     const buffer = Buffer.from(response.data, 'binary');
 
     return buffer;
+}
+
+async function uploadImage(imageUrl, userId, storyId, messageCount) {
+    // Get a reference to the storage service, which is used to create references in your storage bucket
+    const storage = getStorage();
+    // Create a reference to 'mountains.jpg'
+    const imageRef = ref(storage, `${userId}_${storyId}_${messageCount}.png`);
+
+    // 轉換成 Buffer
+    let bufferData = await downloadImageToBuffer(imageUrl);
+    // fs.writeFileSync('image.png', bufferData);
+    // let imageFile = fs.readFileSync('image.png');
+
+    const blob = new Blob([bufferData]); // JavaScript Blob
+    console.log("blob: ", blob)
+    let copyBlob = await blob.arrayBuffer();
+
+    let downloadUrl = "";
+    // 'file' comes from the Blob or File API
+    await uploadBytes(imageRef, copyBlob).then(async (snapshot) => {
+        console.log('Uploaded a blob or file!');
+        // get download url
+        await getDownloadURL(imageRef).then((url) => {
+            downloadUrl = url
+        }).catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(errorCode);
+            console.log(errorMessage);
+        });
+    }).catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.log(errorCode);
+        console.log(errorMessage);
+    });
+    console.log("End of uploading !");
+
+    return downloadUrl;
 }
 
 const getBlobImage = async (req, res) => {
@@ -94,6 +138,7 @@ export {
     dalle,
     callDB,
     downloadImageToBuffer,
-    getBlobImage
+    getBlobImage,
+    uploadImage
 }
 
