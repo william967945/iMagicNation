@@ -2,16 +2,23 @@ import { Configuration, OpenAIApi } from "openai";
 import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 import fs from 'fs';
 import { Blob } from "buffer";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getAuth, signInAnonymously } from "firebase/auth";
 
-import { seq } from "../../app.js";
+
+import { seq, auth } from "../../app.js";
 import {
   chatGPT,
   dalle,
   callDB,
-  downloadImageToBuffer
+  downloadImageToBuffer,
+  uploadImage
 } from "./utils.js";
+import { url } from "inspector";
 
 dotenv.config();
+
+
 
 // var qualityBoosterPrompt = ", 128-bit Pixel Art, 128-bit Pixel Art, 128-bit Pixel Art, 128-bit Pixel Art, 128-bit Pixel Art";
 var qualityBoosterPrompt = ", pixel art, Detailed pixel art, 128-bit Pixel Art, 128-bit Art, Pixelized Style, minecraft";
@@ -29,6 +36,17 @@ const callChatGPT = async (req, res) => {
     console.log(userId);
     console.log(input);
     console.log('-----');
+
+    // Sign in Firebase
+    await signInAnonymously(auth)
+      .then(async () => {
+        // Signed in..
+        console.log("Sign In successfully !")
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+      });
 
     let query = `
     SELECT COUNT(id)
@@ -126,10 +144,13 @@ const callChatGPT = async (req, res) => {
           let prompt = dallePrompt + qualityBoosterPrompt;
           let imageUrl = await dalle(prompt, openai);
 
+          // upload image
+          let downloadUrl = await uploadImage(imageUrl, userId, storyId, messageCount);
+
           // 寫入 DB (input, reply, imageSrc, storyId, authorId)
           let query3 = `
           INSERT INTO messages (input, reply, imageSrc, storyId, authorId)
-          VALUES ('${input}', '${endingQuestion}', '${imageUrl}', '${storyId}', '${userId}')
+          VALUES ('${input}', '${endingQuestion}', '${downloadUrl}', '${storyId}', '${userId}')
           `
           let dbResult = await callDB(query3);
           console.log("DBresult: ", dbResult);
@@ -164,18 +185,21 @@ const callChatGPT = async (req, res) => {
           let prompt = dallePrompt + qualityBoosterPrompt;
           let imageUrl = await dalle(prompt, openai);
 
+          // upload image
+          let downloadUrl = await uploadImage(imageUrl, userId, storyId, messageCount);
+
           let response = [
             {
               input: `${input}`,
               reply: `${finalScore}`,
-              imageSrc: `${imageUrl}`
+              imageSrc: `${downloadUrl}`
             }
           ]
 
           // 寫入 DB (input, reply, imageSrc, storyId, authorId)
           let query2 = `
           INSERT INTO messages (input, reply, imageSrc, storyId, authorId)
-          VALUES ('${input}', '${finalScore}', '${imageUrl}', '${storyId}', '${userId}')
+          VALUES ('${input}', '${finalScore}', '${downloadUrl}', '${storyId}', '${userId}')
           `
           let dbResult = await callDB(query2);
           console.log("DBresult: ", dbResult);
@@ -325,19 +349,17 @@ const callChatGPT = async (req, res) => {
         let prompt = dallePrompt + qualityBoosterPrompt;
         let imageUrl = await dalle(prompt, openai);
 
-        // image from url to buffer
-        // let bufferImage = await downloadImageToBuffer(imageUrl);
-        // 寫入 DB (input, reply, imageSrc, storyId, authorId, word)
+        let downloadUrl = await uploadImage(imageUrl, userId, storyId, messageCount);
 
         if (type !== "小說" && type !== "") {
           var writeReplyQuery = `
           INSERT INTO messages(input, reply, imageSrc, storyId, authorId, word, phrase)
-            VALUES('${input}', '${chatgptResponse}', '${imageUrl}', '${storyId}', '${userId}', '${message_word}', '${message_phrase}')
+            VALUES('${input}', '${chatgptResponse}', '${downloadUrl}', '${storyId}', '${userId}', '${message_word}', '${message_phrase}')
               `
         } else {
           var writeReplyQuery = `
           INSERT INTO messages(input, reply, imageSrc, storyId, authorId)
-            VALUES('${input}', '${chatgptResponse}', '${imageUrl}', '${storyId}', '${userId}')
+            VALUES('${input}', '${chatgptResponse}', '${downloadUrl}', '${storyId}', '${userId}')
               `
         }
 
@@ -542,29 +564,67 @@ const dallePromptTest = async (req, res) => {
 
     let imageUrl = await dalle(prompt, openai);
 
+    await signInAnonymously(auth)
+      .then(async () => {
+        // Signed in..
+        console.log("Sign In successfully !")
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+      });
+
+    // Get a reference to the storage service, which is used to create references in your storage bucket
+    const storage = getStorage();
+    // Create a reference to 'mountains.jpg'
+    const imageRef = ref(storage, 'images.png');
+
     // 轉換成 Buffer
     let bufferData = await downloadImageToBuffer(imageUrl);
-    fs.writeFileSync('image.png', bufferData);
+    // fs.writeFileSync('image.png', bufferData);
+    // let imageFile = fs.readFileSync('image.png');
 
     const blob = new Blob([bufferData]); // JavaScript Blob
-
     console.log("blob: ", blob)
-    let query = `
-        INSERT INTO messages (imageSrc)
-        VALUES (${blob})
-        `
-    let dbResult = await callDB(query);
+    let copyBlob = await blob.arrayBuffer();
+    // 'file' comes from the Blob or File API
+    uploadBytes(imageRef, copyBlob).then((snapshot) => {
+      console.log('Uploaded a blob or file!');
+      // get download url
+      getDownloadURL(imageRef).then((url) => {
+        let downloadUrl = url
+
+        let response = [
+          {
+            input: `${input}`,
+            prompt: `${dallePrompt}`,
+            imageSrc: `${downloadUrl}`,
+          }
+        ]
+        res.json(response);
+        res.status(200);
+      })
+
+    });
+    console.log("End of uploading !");
 
 
-    let response = [
-      {
-        input: `${input}`,
-        prompt: `${dallePrompt}`,
-        imageSrc: `${imageUrl}`
-      }
-    ]
-    res.json(response);
-    res.status(200);
+
+    // 轉換成 Buffer
+    // let bufferData = await downloadImageToBuffer(imageUrl);
+    // fs.writeFileSync('image.png', bufferData);
+
+    // const blob = new Blob([bufferData]); // JavaScript Blob
+
+    // console.log("blob: ", blob)
+    // let query = `
+    //     INSERT INTO messages (imageSrc)
+    //     VALUES (${blob})
+    //     `
+    // let dbResult = await callDB(query);
+
+
+
   } catch (error) {
     console.log(error);
     console.log("ERROR!!");
