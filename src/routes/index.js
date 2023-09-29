@@ -9,7 +9,8 @@ import {
   callChatGPT,
   resetStory,
   dallePromptTest,
-  scoreTest
+  scoreTest,
+  inquireDict
 } from "../controllers/story.js";
 import { getBlobImage } from "../controllers/utils.js";
 
@@ -60,6 +61,9 @@ router.post("/story/callchatgpt", callChatGPT);
 // 故事重置
 router.post("/story/reset", resetStory);
 
+// 字詞查詢
+router.post("/story/inquiry", inquireDict);
+
 // Dalle prompt圖片測試
 router.post("/dalle/test", dallePromptTest)
 
@@ -68,4 +72,5 @@ router.get("/dalle/blob", getBlobImage)
 
 // 評分系統測試
 router.post("/score/test", scoreTest)
+
 export default router;

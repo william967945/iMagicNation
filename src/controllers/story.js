@@ -15,6 +15,8 @@ import {
   uploadImage
 } from "./utils.js";
 import { url } from "inspector";
+import axios from "axios";
+import { error } from "console";
 
 dotenv.config();
 
@@ -607,24 +609,6 @@ const dallePromptTest = async (req, res) => {
 
     });
     console.log("End of uploading !");
-
-
-
-    // 轉換成 Buffer
-    // let bufferData = await downloadImageToBuffer(imageUrl);
-    // fs.writeFileSync('image.png', bufferData);
-
-    // const blob = new Blob([bufferData]); // JavaScript Blob
-
-    // console.log("blob: ", blob)
-    // let query = `
-    //     INSERT INTO messages (imageSrc)
-    //     VALUES (${blob})
-    //     `
-    // let dbResult = await callDB(query);
-
-
-
   } catch (error) {
     console.log(error);
     console.log("ERROR!!");
@@ -664,6 +648,44 @@ const scoreTest = async (req, res) => {
   }
 }
 
+const inquireDict = async (req, res) => {
+  try {
+    let apiKey = req.headers.apikey;
+    let storyId = req.body.storyId;
+    let userId = req.body.userId;
+    let inquiry = req.body.inquiry;
+
+    console.log("APIKEY: ", apiKey)
+    console.log("storyId: ", storyId)
+    console.log("userId: ", userId)
+    console.log("inquiry: ", inquiry)
+
+    let result = await axios({
+      method: 'get',
+      url: `https://pedia.cloud.edu.tw/api/v2/Detail?term=${inquiry}&api_key=${apiKey}`,
+    }).catch((error) => {
+      console.error(error.response.data);
+    })
+
+    console.log("Result: ", result)
+    let response = "";
+    if (result) {
+      response = result.data
+    } else {
+      response = {
+        result: "No definition !"
+      }
+    }
+
+    res.json(response);
+    res.status(200);
+  } catch (error) {
+    console.log(error);
+    console.log("ERROR!!");
+    res.send(error);
+  }
+}
+
 
 export {
   callChatGPT,
@@ -674,5 +696,6 @@ export {
   postStoryProgressByUser,
   resetStory,
   dallePromptTest,
-  scoreTest
+  scoreTest,
+  inquireDict
 };
