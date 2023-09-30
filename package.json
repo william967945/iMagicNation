@@ -23,6 +23,8 @@
     "morgan": "^1.10.0",
     "mysql2": "^2.3.3",
     "openai": "^3.2.1",
-    "sequelize": "^6.33.0"
+    "sequelize": "^6.33.0",
+    "uuid": "^9.0.1",
+    "videoshow": "^0.1.12"
   }
 }
