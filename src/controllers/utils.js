@@ -1,15 +1,16 @@
 import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 import axios from "axios";
-import fs from 'fs';
+import fs from "fs";
 import { Blob } from "buffer";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import videoshow from "videoshow";
+import path from "path";
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAuth, signInAnonymously } from "firebase/auth";
 
 import { seq, auth } from "../../app.js";
-
+import { url } from "inspector";
 
 dotenv.config();
 
@@ -154,10 +155,10 @@ const speechApi = async (ssml) => {
         responseType: "arraybuffer",
         headers: {
             authority: "southeastasia.api.speech.microsoft.com",
-            accept: "/",
+            accept: "*/*",
             "accept-language": "zh-CN,zh;q=0.9",
             customvoiceconnectionid: uuidv4(),
-            origin: "https://speech.microsoft.com/",
+            origin: "https://speech.microsoft.com",
             "sec-ch-ua":
                 '"Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"',
             "sec-ch-ua-mobile": "?0",
@@ -189,45 +190,40 @@ function sleep() {
     return new Promise((resolve) => setTimeout(resolve, 3000));
 }
 
-
-const getVoice = async (req, res) => {
-    var str = req.body.str;
+const getVoice = async (str) => {
     let retry = 0;
+
     while (retry < 50) {
         try {
             console.log("Speech invocation attempt", retry + 1);
             const result = await speechApi(
-                ` <speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-US"><voice name="zh-CN-YunxiNeural"><mstts:express-as  style="Default" ><prosody rate="0%" pitch="0%">${str}</prosody></mstts:express-as></voice></speak> `
+                `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-US"><voice name="zh-CN-YunxiNeural"><mstts:express-as  style="Default" ><prosody rate="45%" pitch="0%">${str}</prosody></mstts:express-as></voice></speak>`
             );
             console.log(result);
-            const currTime = new Date().getTime().toString();
-            const filePath = path.join("./", currTime + ".mp3");
+
             const uint8Array = new Uint8Array(result);
-
-            const nodeBuffer = Buffer.from(uint8Array);
-            console.log(nodeBuffer);
-            //   下載音檔
-            //   fs.writeFileSync(path.resolve(filePath), nodeBuffer);
-
+            const concatenatedBuffer = Buffer.concat([result]);
             console.log(uint8Array);
 
-            res.type("application/octet-stream").send(uint8Array);
-            return result; // 执行成功，返回结果
+            return uint8Array; // 执行成功，返回结果
         } catch (error) {
             console.error("Speech invocation failed:", error);
             await sleep(); // 暂停一段时间后再重试
         }
         retry++;
     }
-    throw new Error(`Speech invocation failed after ${retry} retries`); // 重试次数用尽，抛出异常
+    throw new Error(`Speech invocation failed after ${retryCount} retries`); // 重试次数用尽，抛出异常
 };
 
 const getVideo = async (req, res) => {
     var str = req.body.buffer;
 
+    let storyId = req.body.storyId;
+    let userId = req.body.userId;
+
     var videoOptions = {
         fps: 25,
-        loop: 5, // seconds
+        loop: 18, // seconds
         transition: true,
         transitionDuration: 1, // seconds
         videoBitrate: 1024,
@@ -239,11 +235,119 @@ const getVideo = async (req, res) => {
         pixelFormat: "yuv420p",
     };
 
-    let videoName = "titoktest"
-    // images: [url1, url2] or [path1, path2]
-    videoshow(['image.png', 'image_2.png'], videoOptions)
-        .audio("./audio.mp3")
-        .save(`${videoName}.mp4`)
+    let videoName = "titoktest";
+
+    // 抓所有 messages 的 reply
+    // 總結系統
+    let query = `
+    SELECT initDialog, type
+    FROM stories
+    WHERE (id = ${storyId})
+    `
+    let dbResponse = await callDB(query);
+    let firstDialog = dbResponse[0]['initDialog'];
+    let type = dbResponse[0]['type'];
+
+    let query2 = `
+    SELECT input, reply
+    FROM messages
+    WHERE (authorId = '${userId}' AND storyId = ${storyId})
+    `
+    let wholeMessage = await callDB(query2);
+
+    let concatenatedText = '';
+    for (const item of wholeMessage) {
+        concatenatedText += item.input + ' ' + item.reply;
+    }
+    let wholeStory = firstDialog + concatenatedText;
+
+    let a = wholeStory.replace(/[\r\n]/g, '');
+
+    console.log("WholeStory: ", a);
+
+
+    const delimiters = ["，", "。", "？", ",", ".", "?", "\n"];
+    const maxSize = 300;
+    console.log("字数过多，正在对文本切片。。。");
+
+    const inputValue = a; // 请替换成您的输入文本
+    const textHandler = inputValue.split("").reduce(
+        (obj, char, index) => {
+            obj.buffer.push(char);
+            if (delimiters.indexOf(char) >= 0) obj.end = index;
+            if (obj.buffer.length === maxSize) {
+                obj.res.push(
+                    obj.buffer.splice(0, obj.end + 1 - obj.offset).join("")
+                );
+                obj.offset += obj.res[obj.res.length - 1].length;
+            }
+            return obj;
+        },
+        {
+            buffer: [],
+            end: 0,
+            offset: 0,
+            res: [],
+        }
+    );
+    textHandler.res.push(textHandler.buffer.join(""));
+
+    const tasks = textHandler.res;
+    console.log("tasks:", tasks);
+    console.log("Tasks Length: ", tasks.length)
+
+
+    // 如果需要处理 buffers，您可以在这里添加相应的代码，这里只包含了文本切片部分的代码示例
+    // this.currMp3Buffer = Buffer.concat([this.currMp3Buffer, buffers]);
+    // let audioFileName = await getVoice(storyId, userId);
+    var allBuffer = Buffer.from("");
+    for (var i = 0; i < tasks.length; i++) {
+        var buffer = await getVoice(tasks[i])
+        var nodeBuffer = Buffer.from(buffer);
+        allBuffer = Buffer.concat([allBuffer, nodeBuffer]);
+    }
+
+    const currTime = new Date().getTime().toString();
+    var naming = `${storyId}_${userId}_` + currTime
+
+    const filePath = path.join("./", naming + ".mp3");
+    //下載音檔
+    fs.writeFileSync(path.resolve(filePath), allBuffer);
+    console.log("All Buffer: ", allBuffer);
+
+    // console.log("AudioFileName: ", audioFileName)
+
+    // 下載圖片
+    // 把之前的故事記錄全部抓出來
+    let query3 = `
+    SELECT imageSrc
+    FROM messages
+    WHERE(authorId = '${userId}' AND storyId = ${storyId})
+    `
+    let historyReply = await callDB(query3);
+
+    async function downloadImage(url, filename) {
+        const response = await axios.get(url, { responseType: 'arraybuffer' });
+
+        fs.writeFile(filename, response.data, (err) => {
+            if (err) throw err;
+            console.log('Image downloaded successfully!');
+        });
+    }
+
+    const imageArray = await historyReply.map(async (imageUrl, index) => {
+        let url = imageUrl.imageSrc
+        let result = await downloadImage(url, `${naming}_${index}.png`);
+        return `${naming}_${index}.png`
+    })
+
+    const imagePath = await Promise.all(imageArray)
+    // images: [path1, path2]
+    console.log("ImageArray: ", imagePath);
+
+    videoshow(imagePath, videoOptions)
+        .audio(`${naming}.mp3`)
+        .save(`${naming}.mp4`)
         .on("start", function (command) {
             console.log("ffmpeg process started:", command);
         })
@@ -256,7 +360,7 @@ const getVideo = async (req, res) => {
             await signInAnonymously(auth)
                 .then(async () => {
                     // Signed in..
-                    console.log("Sign In successfully !")
+                    console.log("Sign In successfully !");
                 })
                 .catch((error) => {
                     const errorCode = error.code;
@@ -266,32 +370,42 @@ const getVideo = async (req, res) => {
             // Get a reference to the storage service, which is used to create references in your storage bucket
             const storage = getStorage();
             // Create a reference to 'mountains.jpg'
-            const videoRef = ref(storage, `/video/${videoName}.mp4`);
+            const videoRef = ref(storage, `/video/${naming}.mp4`);
 
-            let videoFile = fs.readFileSync(`${videoName}.mp4`);
+            let videoFile = fs.readFileSync(`${naming}.mp4`);
 
             const videoBlob = new Blob([videoFile]); // JavaScript Blob
-            console.log("blob: ", videoBlob)
+            console.log("blob: ", videoBlob);
             let copyVideoBlob = await videoBlob.arrayBuffer();
 
             // 'file' comes from the Blob or File API
             await uploadBytes(videoRef, copyVideoBlob).then(async (snapshot) => {
-                console.log('Uploaded a blob or file!');
+                console.log("Uploaded a blob or file!");
                 // get download url
                 await getDownloadURL(videoRef).then((url) => {
-                    let downloadUrl = url
+                    let downloadUrl = url;
 
                     let response = [
                         {
                             videoSrc: `${downloadUrl}`,
-                        }
-                    ]
+                        },
+                    ];
+
+                    // delete png
+                    for(let i = 0; i < imagePath.length; i++) {
+                        fs.unlinkSync(imagePath[i])
+                        console.log("Delete File successfully.");
+                    }
+                    // delete mp3, mp4
+                    fs.unlinkSync(`${naming}.mp3`);
+                    fs.unlinkSync(`${naming}.mp4`);
+                    
+
                     res.json(response);
                     res.status(200);
-                })
+                });
             });
-        })
-
+        });
 };
 
 export {
