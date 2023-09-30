@@ -1,0 +1,8 @@
+[phases.setup]
+aptPkgs = [
+  '...'
+  "ffmpeg",
+]
+
+[start]
+cmd = "ffmpeg 2>&1"
