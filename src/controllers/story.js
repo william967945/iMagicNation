@@ -552,6 +552,9 @@ const dallePromptTest = async (req, res) => {
     let openaiApiKey = req.headers.bearer;
     let input = req.body.input;
 
+    let storyId = req.body.storyId;
+    let partId = req.body.partId;
+
     // call chatgpt api
     const configuration = new Configuration({
       organization: "org-O0J27zQrydIuKDx8csuyhqgH",
@@ -579,7 +582,7 @@ const dallePromptTest = async (req, res) => {
     // Get a reference to the storage service, which is used to create references in your storage bucket
     const storage = getStorage();
     // Create a reference to 'mountains.jpg'
-    const imageRef = ref(storage, 'images.png');
+    const imageRef = ref(storage, `ethic_${storyId}_${partId}.png`);
 
     // 轉換成 Buffer
     let bufferData = await downloadImageToBuffer(imageUrl);

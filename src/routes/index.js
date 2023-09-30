@@ -12,7 +12,7 @@ import {
   scoreTest,
   inquireDict
 } from "../controllers/story.js";
-import { getBlobImage } from "../controllers/utils.js";
+import { getBlobImage, getVideo } from "../controllers/utils.js";
 
 var router = Router();
 
@@ -72,5 +72,8 @@ router.get("/dalle/blob", getBlobImage)
 
 // 評分系統測試
 router.post("/score/test", scoreTest)
+
+// 影片匯出
+router.get("/video/test", getVideo)
 
 export default router;
