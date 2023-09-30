@@ -650,7 +650,7 @@ const scoreTest = async (req, res) => {
 
 const inquireDict = async (req, res) => {
   try {
-    let apiKey = req.headers.apikey;
+    let apiKey = process.env.DICT_API_KEY;
     let storyId = req.body.storyId;
     let userId = req.body.userId;
     let inquiry = req.body.inquiry;
