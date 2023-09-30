@@ -1,7 +1,13 @@
 [phases.setup]
 aptPkgs = [
-  '...',
-  'ffmpeg',
+  "...",
+  "ffmpeg",
+  "imagemagick",
+  "ghostscript",
+  "gsfonts",
+  "fonts-droid-fallback",
+  "fonts-noto-mono",
+  "fonts-urw-base35",
 ]
 
 [start]
