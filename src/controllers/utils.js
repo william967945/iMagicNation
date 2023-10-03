@@ -261,16 +261,20 @@ const getVideo = async (req, res) => {
     }
     let wholeStory = firstDialog + concatenatedText;
 
-    let a = wholeStory.replace(/[\r\n]/g, '');
+    let newWholeStory = wholeStory.replace(/[\r\n]/g, '');
 
-    console.log("WholeStory: ", a);
+    console.log("WholeStory: ", newWholeStory);
 
+    let blankQuestion = newWholeStory.indexOf("填空題")
+    let wholeStoryWithoutQuestion = newWholeStory.slice(0, blankQuestion);
+
+    console.log("WholeStoryWithoutQuestion: ", wholeStoryWithoutQuestion)
 
     const delimiters = ["，", "。", "？", ",", ".", "?", "\n"];
     const maxSize = 300;
     console.log("字数过多，正在对文本切片。。。");
 
-    const inputValue = a; // 请替换成您的输入文本
+    const inputValue = wholeStoryWithoutQuestion; // 请替换成您的输入文本
     const textHandler = inputValue.split("").reduce(
         (obj, char, index) => {
             obj.buffer.push(char);
