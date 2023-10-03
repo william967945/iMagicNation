@@ -240,7 +240,7 @@ const getVideo = async (req, res) => {
     // 抓所有 messages 的 reply
     // 總結系統
     let query = `
-    SELECT initDialog, type
+    SELECT initDialog, type, initImage
     FROM stories
     WHERE (id = ${storyId})
     `
@@ -319,12 +319,31 @@ const getVideo = async (req, res) => {
 
     // 下載圖片
     // 把之前的故事記錄全部抓出來
-    let query3 = `
+
+    // let query3 = `
+    // SELECT initImage
+    // FROM stories
+    // WHERE(storyId = ${storyId})
+    // `
+    // let initImage = await callDB(query4);
+    // console.log("InitImage: ", initImage);
+
+    delete dbResponse[0].type;
+    delete dbResponse[0].initDialog;
+    dbResponse[0]['imageSrc'] = dbResponse[0]['initImage']
+    delete dbResponse[0]['initImage']
+
+    let query4 = `
     SELECT imageSrc
     FROM messages
     WHERE(authorId = '${userId}' AND storyId = ${storyId})
     `
-    let historyReply = await callDB(query3);
+    let historyReply = await callDB(query4);
+
+    console.log("DBResponse: ", dbResponse[0]);
+
+    historyReply.unshift(dbResponse[0]);
+
 
     async function downloadImage(url, filename) {
         const response = await axios.get(url, { responseType: 'arraybuffer' });
@@ -392,14 +411,14 @@ const getVideo = async (req, res) => {
                     ];
 
                     // delete png
-                    for(let i = 0; i < imagePath.length; i++) {
+                    for (let i = 0; i < imagePath.length; i++) {
                         fs.unlinkSync(imagePath[i])
                         console.log("Delete File successfully.");
                     }
                     // delete mp3, mp4
                     fs.unlinkSync(`${naming}.mp3`);
                     fs.unlinkSync(`${naming}.mp4`);
-                    
+
 
                     res.json(response);
                     res.status(200);
@@ -407,6 +426,29 @@ const getVideo = async (req, res) => {
             });
         });
 };
+
+const importWorkSheet = async (req, res) => {
+    //transformer
+    const XLSX = require("xlsx");
+    //name
+    const workbook = XLSX.readFile("題目DB.xlsx");
+    //sheet
+    const worksheet = workbook.Sheets["工作表1"];
+
+    const arrData = XLSX.utils.sheet_to_json(worksheet);
+
+    //insert arrData in SQL
+    // console.log(arrData);
+
+    // get out arrData information
+    for (const data of arrData) {
+        const id = data["story_id"];
+        const detail = data["part_detail"];
+
+        console.log(id);
+        console.log(detail);
+    }
+}
 
 export {
     chatGPT,
