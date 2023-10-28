@@ -4,14 +4,15 @@ import logger from "morgan";
 import { config } from "dotenv";
 import Sequelize from "sequelize";
 import cors from "cors";
-import axios from "axios";
+import process from "process";
+
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously } from "firebase/auth";
 
-
 import indexRouter from "./src/routes/index.js";
 import userRouter from "./src/routes/user.js";
+
 
 var app = express();
 
@@ -31,13 +32,6 @@ app.use("/", indexRouter);
 
 const seq = new Sequelize(process.env.MYSQL_URL); // Example for sqlite
 
-// const seq = new Sequelize(process.env.MYSQLDATABASE, process.env.MYSQLUSER, process.env.MYSQLPASSWORD, {
-//   host: process.env.MYSQLHOST,
-//   port: process.env.MYSQLPORT,
-//   dialect: 'mysql',
-// });
-
-
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -54,7 +48,6 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 
-
 seq
   .authenticate()
   .then(() => {
@@ -69,7 +62,6 @@ app.listen(port, () => {
   console.log("next-------------------------------------");
 });
 
-// test2
-// new test
+
 export default app;
 export { seq, auth };
