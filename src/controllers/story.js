@@ -351,13 +351,13 @@ const callChatGPT = async (req, res) => {
 
           // 對 chatGPT 提供素材生成故事
           let element = await chatGPT(`"${previousReply}我:${input}"\n------------\n請隨機提供一個跟上述內容風格有關的名詞。不能跟內容重複。`, "", openai);
-          var chatgptResponse = await chatGPT(`"${previousReply}我:${input}"\n------------\n請用繁體中文根據上述的故事內容續寫50字的第二人稱文字冒險劇情。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.必須使用到國字「${finalWordWithoutFirstComma}」\n4.必須使用到詞語「${finalPhraseWithoutFirstComma}」\n5.在劇情結尾問主角接下來的行動\n6.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
+          var chatgptResponse = await chatGPT(`"${previousReply}我:${input}"\n------------\n請用繁體中文根據上述的故事內容續寫50字的第二人稱文字劇情。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.必須使用到國字「${finalWordWithoutFirstComma}」\n4.必須使用到詞語「${finalPhraseWithoutFirstComma}」\n5.在劇情結尾問主角接下來的行動\n6.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
           var dallePrompt = await chatGPT(`${chatgptResponse} \n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."`, "You are a DALL-E prompt engineer.", openai);
         } else {
           // 小說 prompt
           // 對 chatGPT 提供素材生成故事
           let element = await chatGPT(`"${previousReply}我:${input}"\n------------\n請隨機提供一個跟上述內容風格有關的名詞。不能跟內容重複。`, "", openai);
-          var chatgptResponse = await chatGPT(`"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展50字的第二人稱文字冒險小說。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.在劇情結尾問主角接下來的行動\n4.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
+          var chatgptResponse = await chatGPT(`"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展50字的第二人稱文字小說。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.在劇情結尾問主角接下來的行動\n4.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
           var dallePrompt = await chatGPT(`${chatgptResponse} \n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."`, "You are a DALL-E prompt engineer.", openai);
         }
 
