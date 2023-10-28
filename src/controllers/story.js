@@ -21,7 +21,6 @@ import { error } from "console";
 dotenv.config();
 
 
-
 // var qualityBoosterPrompt = ", 128-bit Pixel Art, 128-bit Pixel Art, 128-bit Pixel Art, 128-bit Pixel Art, 128-bit Pixel Art";
 var qualityBoosterPrompt = ", pixel art, Detailed pixel art, 128-bit Pixel Art, 128-bit Art, Pixelized Style, minecraft";
 
@@ -136,7 +135,21 @@ const callChatGPT = async (req, res) => {
             let phrase_array = phrase.split(" ");
             let phrasesWithComma = phrase_array.join(',');
 
-            var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出五個填空題，內容須滿足以下要求:\n\n1. 填空題的出題形式為: 五題填空題"總共"需要使用到所有第二點列出的國字、第三點的詞語，並將出現的國字與詞語挖空讓學生填寫。填空題不需要跟上述劇情相關。最後提供答案。\n\n2. 國字: ${wordsWithComma}\n\n3. 詞語: ${phrasesWithComma}\n\n4. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
+            // var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出五個填空題，內容須滿足以下要求:\n\n1. 填空題的出題形式為: 五題填空題"總共"需要使用到所有第二點列出的國字、第三點的詞語，並將出現的國字與詞語挖空讓學生填寫。填空題不需要跟上述劇情相關。最後提供答案。\n\n2. 國字: ${wordsWithComma}\n\n3. 詞語: ${phrasesWithComma}\n\n4. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
+            var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出三個填空題，內容須滿足以下要求:\n\n1. 填空題的出題形式為: 三題填空題"一定要使用"第二點列出的國字、第三點的詞語出題，並將出現的國字與詞語挖空讓學生填寫。填空題不需要跟上述劇情相關。最後不需要顯示答案。\n\n2. 國字: ${wordsWithComma}\n\n3. 詞語: ${phrasesWithComma}\n\n4. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子，且句子要符合大眾常識，符合中文語法。`, "你是一位專門寫故事給國小學生的編劇。", openai);
+            // var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出五個填空題，內容須滿足以下要求:\n\n1.請根據以下提供的詞語創造填空題並以json形式回傳，格式如下{  "questions": [    {      "sentence": "這是____的書。",      "answer": "你"    },  ]}\n\n2. 詞語: ${phrasesWithComma}\n\n3. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
+
+            // // 使用正则表达式匹配大括号内的 JSON 数据
+            // const regex = /\{[^{}]*\}/;
+            // const matches = endingQuestion.match(regex);
+            // console.log("Matches: ", matches);
+            // if (matches) {
+            //   const jsonData = JSON.parse(matches[0]);
+            //   console.log(jsonData);
+            // } else {
+            //   console.log('未找到匹配的 JSON 数据');
+            // }
+
             var dallePrompt = await chatGPT(`${endingQuestion}\n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."`, "You are a DALL-E prompt engineer.", openai);
           } else {
             var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出一個道德觀念題。`, "你是一位專門寫故事給國小學生的編劇。", openai);
@@ -338,13 +351,13 @@ const callChatGPT = async (req, res) => {
 
           // 對 chatGPT 提供素材生成故事
           let element = await chatGPT(`"${previousReply}我:${input}"\n------------\n請隨機提供一個跟上述內容風格有關的名詞。不能跟內容重複。`, "", openai);
-          var chatgptResponse = await chatGPT(`"${previousReply}我:${input}"\n------------\n請用繁體中文根據上述的故事內容續寫20字的第二人稱文字冒險劇情。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.必須使用到國字「${finalWordWithoutFirstComma}」\n4.必須使用到詞語「${finalPhraseWithoutFirstComma}」\n5.在劇情結尾問主角接下來的行動\n6.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
+          var chatgptResponse = await chatGPT(`"${previousReply}我:${input}"\n------------\n請用繁體中文根據上述的故事內容續寫50字的第二人稱文字冒險劇情。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.必須使用到國字「${finalWordWithoutFirstComma}」\n4.必須使用到詞語「${finalPhraseWithoutFirstComma}」\n5.在劇情結尾問主角接下來的行動\n6.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
           var dallePrompt = await chatGPT(`${chatgptResponse} \n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."`, "You are a DALL-E prompt engineer.", openai);
         } else {
           // 小說 prompt
           // 對 chatGPT 提供素材生成故事
           let element = await chatGPT(`"${previousReply}我:${input}"\n------------\n請隨機提供一個跟上述內容風格有關的名詞。不能跟內容重複。`, "", openai);
-          var chatgptResponse = await chatGPT(`"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展20字的第二人稱文字冒險小說。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.在劇情結尾問主角接下來的行動\n4.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
+          var chatgptResponse = await chatGPT(`"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展50字的第二人稱文字冒險小說。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.在劇情結尾問主角接下來的行動\n4.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
           var dallePrompt = await chatGPT(`${chatgptResponse} \n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."`, "You are a DALL-E prompt engineer.", openai);
         }
 

@@ -235,7 +235,6 @@ const getVideo = async (req, res) => {
         pixelFormat: "yuv420p",
     };
 
-    let videoName = "titoktest";
 
     // 抓所有 messages 的 reply
     // 總結系統
