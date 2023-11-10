@@ -1,11 +1,8 @@
 import OpenAI from "openai";
 import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
-import fs from 'fs';
 import { Blob } from "buffer";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getAuth, signInAnonymously } from "firebase/auth";
-
-
+import { signInAnonymously } from "firebase/auth";
 import { seq, auth } from "../../app.js";
 import {
   chatGPT,
@@ -14,9 +11,7 @@ import {
   downloadImageToBuffer,
   uploadImage
 } from "./utils.js";
-import { url } from "inspector";
 import axios from "axios";
-import { error } from "console";
 
 dotenv.config();
 

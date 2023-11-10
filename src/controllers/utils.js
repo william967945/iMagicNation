@@ -7,10 +7,9 @@ import videoshow from "videoshow";
 import path from "path";
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getAuth, signInAnonymously } from "firebase/auth";
+import { signInAnonymously } from "firebase/auth";
 
 import { seq, auth } from "../../app.js";
-import { url } from "inspector";
 
 dotenv.config();
 
@@ -22,10 +21,8 @@ async function chatGPT(prompt, system, openai) {
       { role: "system", content: system },
       { role: "user", content: prompt },
     ],
-    stream: true,
   });
-  console.log(completion);
-  return completion;
+
   console.log(completion.choices[0].message);
 
   let response = completion.choices[0].message.content;
@@ -34,7 +31,6 @@ async function chatGPT(prompt, system, openai) {
 }
 
 async function dalle(prompt, openai) {
-  console.log("dalle");
   // DALL-E
   const imageResult = await openai.images.generate({
     model: "dall-e-3",
