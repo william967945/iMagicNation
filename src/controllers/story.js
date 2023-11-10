@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 import fs from 'fs';
 import { Blob } from "buffer";
@@ -83,11 +83,11 @@ const callChatGPT = async (req, res) => {
         回傳 input, reply, imageSrc
       */
       // call chatgpt api
-      const configuration = new Configuration({
+      const configuration = {
         organization: "org-O0J27zQrydIuKDx8csuyhqgH",
         apiKey: openaiApiKey || process.env.OPENAI_API_KEY,
-      });
-      const openai = new OpenAIApi(configuration);
+      };
+      const openai = new OpenAI(configuration);
 
 
       if (messageCount >= 4) {
@@ -136,7 +136,7 @@ const callChatGPT = async (req, res) => {
             let phrasesWithComma = phrase_array.join(',');
 
             // var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出五個填空題，內容須滿足以下要求:\n\n1. 填空題的出題形式為: 五題填空題"總共"需要使用到所有第二點列出的國字、第三點的詞語，並將出現的國字與詞語挖空讓學生填寫。填空題不需要跟上述劇情相關。最後提供答案。\n\n2. 國字: ${wordsWithComma}\n\n3. 詞語: ${phrasesWithComma}\n\n4. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
-            var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出三個填空題，內容須滿足以下要求:\n\n1. 填空題的出題形式為: 三題填空題"一定要使用"第二點列出的國字、第三點的詞語出題，並將出現的國字與詞語挖空讓學生填寫。填空題不需要跟上述劇情相關。最後不需要顯示答案。\n\n2. 國字: ${wordsWithComma}\n\n3. 詞語: ${phrasesWithComma}\n\n4. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子，且句子要符合大眾常識，符合中文語法。`, "你是一位專門寫故事給國小學生的編劇。", openai);
+            var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成故事結尾並提出三個填空題，內容須滿足以下要求:\n\n1. 填空題的出題形式為: 三題填空題"一定要使用"第二點列出的國字、第三點的詞語出題，並將出現的國字與詞語挖空讓學生填寫。填空題不需要跟上述劇情相關。最後不需要顯示答案。\n\n2. 國字: ${wordsWithComma}\n\n3. 詞語: ${phrasesWithComma}\n\n4. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子，且句子要符合大眾常識，符合中文語法。 4. 在填空題之前呈現國字與詞語，讓使用者能夠知道填空題的選項`, "你是一位專門寫故事給國小學生的編劇。", openai);
             // var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出五個填空題，內容須滿足以下要求:\n\n1.請根據以下提供的詞語創造填空題並以json形式回傳，格式如下{  "questions": [    {      "sentence": "這是____的書。",      "answer": "你"    },  ]}\n\n2. 詞語: ${phrasesWithComma}\n\n3. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子`, "你是一位專門寫故事給國小學生的編劇。", openai);
 
             // // 使用正则表达式匹配大括号内的 JSON 数据
@@ -149,7 +149,7 @@ const callChatGPT = async (req, res) => {
             // } else {
             //   console.log('未找到匹配的 JSON 数据');
             // }
-
+            
             var dallePrompt = await chatGPT(`${endingQuestion}\n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."`, "You are a DALL-E prompt engineer.", openai);
           } else {
             var endingQuestion = await chatGPT(`${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出一個道德觀念題。`, "你是一位專門寫故事給國小學生的編劇。", openai);
@@ -196,7 +196,7 @@ const callChatGPT = async (req, res) => {
 
           let finalScore = await chatGPT(`問題: ${previousReply}\n\n我的回答: ${input}\n------------\n請用繁體中文依據"學生的回答"與"問題"的"相關性、契合度、完整性"給出0到100之間的分數並說明理由。格式如下:\n參考分數: <你的分數>\n參考評語: <你的評語>\n\n#lang: zh-tw`, "You are a teacher in elementary school.", openai);
           let dallePrompt = await chatGPT(`${finalScore}\n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."`, "You are a DALL-E prompt engineer.", openai);
-
+          console.log('199')
           let prompt = dallePrompt + qualityBoosterPrompt;
           let imageUrl = await dalle(prompt, openai);
 
