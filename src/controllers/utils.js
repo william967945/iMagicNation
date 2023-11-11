@@ -30,6 +30,24 @@ async function chatGPT(prompt, system, openai) {
   return response;
 }
 
+async function gptJson(prompt, system, openai) {
+  console.log("JSON prompt: ", prompt);
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4-1106-preview",
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: prompt },
+    ],
+    response_format: { type: "json_object" },
+  });
+
+  console.log(completion.choices[0].message);
+
+  let response = completion.choices[0].message.content;
+
+  return response;
+}
+
 async function dalle(prompt, openai) {
   // DALL-E
   const imageResult = await openai.images.generate({
@@ -450,6 +468,7 @@ const importWorkSheet = async (req, res) => {
 
 export {
   chatGPT,
+  gptJson,
   dalle,
   callDB,
   downloadImageToBuffer,
