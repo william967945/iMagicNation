@@ -5,6 +5,7 @@ import { Blob } from "buffer";
 import { v4 as uuidv4 } from "uuid";
 import videoshow from "videoshow";
 import path from "path";
+import musicMetadata from "music-metadata";
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { signInAnonymously } from "firebase/auth";
@@ -240,20 +241,6 @@ const getVideo = async (req, res) => {
   let storyId = req.body.storyId;
   let userId = req.body.userId;
 
-  var videoOptions = {
-    fps: 25,
-    loop: 18, // seconds
-    transition: true,
-    transitionDuration: 1, // seconds
-    videoBitrate: 1024,
-    videoCodec: "libx264",
-    size: "640x?",
-    audioBitrate: "128k",
-    audioChannels: 2,
-    format: "mp4",
-    pixelFormat: "yuv420p",
-  };
-
   // 抓所有 messages 的 reply
   // 總結系統
   let query = `
@@ -272,6 +259,8 @@ const getVideo = async (req, res) => {
     `;
   let wholeMessage = await callDB(query2);
 
+  wholeMessage.splice(-1, 1);
+
   let concatenatedText = "";
   for (const item of wholeMessage) {
     concatenatedText += item.input + " " + item.reply;
@@ -282,16 +271,15 @@ const getVideo = async (req, res) => {
 
   console.log("WholeStory: ", newWholeStory);
 
-  let blankQuestion = newWholeStory.indexOf("填空題");
-  let wholeStoryWithoutQuestion = newWholeStory.slice(0, blankQuestion);
-
-  console.log("WholeStoryWithoutQuestion: ", wholeStoryWithoutQuestion);
+  // let blankQuestion = newWholeStory.indexOf("參考分數");
+  // let wholeStoryWithoutQuestion = newWholeStory.slice(0, blankQuestion);
+  // console.log("WholeStoryWithoutQuestion: ", wholeStoryWithoutQuestion);
 
   const delimiters = ["，", "。", "？", ",", ".", "?", "\n"];
   const maxSize = 300;
   console.log("字数过多，正在对文本切片。。。");
 
-  const inputValue = wholeStoryWithoutQuestion; // 请替换成您的输入文本
+  const inputValue = newWholeStory; // 请替换成您的输入文本
   const textHandler = inputValue.split("").reduce(
     (obj, char, index) => {
       obj.buffer.push(char);
@@ -357,6 +345,10 @@ const getVideo = async (req, res) => {
     WHERE(authorId = '${userId}' AND storyId = ${storyId})
     `;
   let historyReply = await callDB(query4);
+  historyReply.splice(-1, 1);
+  console.log("HHHHSSSSSSSSSSSSSSSSS")
+  console.log("History reply: ", historyReply)
+  console.log("HHHHEEEEEEEEEEEEEEEEE")
 
   console.log("DBResponse: ", dbResponse[0]);
 
@@ -380,6 +372,37 @@ const getVideo = async (req, res) => {
   const imagePath = await Promise.all(imageArray);
   // images: [path1, path2]
   console.log("ImageArray: ", imagePath);
+
+  // decide loop second
+  async function getDuration(buffer) {
+    try {
+      const metadata = await musicMetadata.parseBuffer(buffer, { duration: true });
+      return metadata.format.duration;
+    } catch (error) {
+      console.log("Error reading metadata: ", error);
+      return null;
+    }
+  }
+
+  let duration = await getDuration(allBuffer);
+  console.log("SSSSSSSSSSSSSS")
+  console.log("Duration: ", duration)
+  console.log("EEEEEEEEEEEEEE")
+
+  var videoOptions = {
+    fps: 24,
+    // 根據mp3長度除圖片數量決定每張圖持續時間
+    loop: duration / 6 + 3, // seconds
+    transition: true,
+    transitionDuration: 1, // seconds
+    videoBitrate: 1024,
+    videoCodec: "libx264",
+    size: "640x?",
+    audioBitrate: "128k",
+    audioChannels: 2,
+    format: "mp4",
+    pixelFormat: "yuv420p",
+  };
 
   videoshow(imagePath, videoOptions)
     .audio(`${naming}.mp3`)

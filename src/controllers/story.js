@@ -710,11 +710,11 @@ const scoreTest = async (req, res) => {
     let question = req.body.question;
 
     // call chatgpt api
-    const configuration = new Configuration({
+    const configuration = {
       organization: "org-O0J27zQrydIuKDx8csuyhqgH",
       apiKey: openaiApiKey || process.env.OPENAI_API_KEY,
-    });
-    const openai = new OpenAIApi(configuration);
+    };
+    const openai = new OpenAI(configuration);
 
     let finalScore = await chatGPT(
       `問題: ${question}\n\n學生的回答: ${input}\n------------\n請依據"學生的回答"與"問題"的"相關性、契合度、完整性"給出0到100之間的分數並說明理由。格式如下:\n參考分數: <你的分數>\n參考評語: <你的評語>`,
