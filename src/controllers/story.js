@@ -201,13 +201,13 @@ const callChatGPT = async (req, res) => {
           // messageCount >= 5, 觸發評分系統
 
           let query = `
-          SELECT reply
+          SELECT questions
           FROM messages
           WHERE authorId = '${userId}' AND storyId = ${storyId} AND id = (SELECT MAX(id) FROM messages WHERE authorId = '${userId}' AND storyId = ${storyId})
           `;
           let lastReply = await callDB(query);
           console.log("lastReply: ", lastReply);
-          let previousReply = lastReply[0]["reply"];
+          let previousReply = lastReply[0]["questions"];
 
           let finalScore = await chatGPT(
             `問題: ${previousReply}\n\n我的回答: ${input}\n------------\n請用繁體中文依據"學生的回答"與"問題"的"相關性、契合度、完整性"給出0到100之間的分數並說明理由。格式如下:\n參考分數: <你的分數>\n參考評語: <你的評語>\n\n#lang: zh-tw`,
