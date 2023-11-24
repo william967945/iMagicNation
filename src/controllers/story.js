@@ -185,18 +185,9 @@ const callChatGPT = async (req, res) => {
           let dbResult = await callDB(query3);
           console.log("DBresult: ", dbResult);
 
-          let query4 = `
-          SELECT input, reply, imageSrc
-          FROM messages
-          WHERE (authorId = '${userId}' AND storyId = ${storyId})
-          `;
-          let historyReply = await callDB(query4);
-
-          // generate response for api
-          let response = historyReply;
-
-          res.json(response);
-          res.status(200);
+          res.status(200).send({
+            message: "success",
+          });
         } else {
           // messageCount >= 5, 觸發評分系統
 
@@ -247,8 +238,9 @@ const callChatGPT = async (req, res) => {
           let dbResult = await callDB(query2);
           console.log("DBresult: ", dbResult);
 
-          res.json(response);
-          res.status(200);
+          res.status(200).send({
+            message: "success",
+          });
         }
       } else {
         // 抓上一次的reply 沒有就抓 stories table 的 initDialog
@@ -257,6 +249,7 @@ const callChatGPT = async (req, res) => {
         let type = ""; // type: 一上康軒第一課
         let word = "";
         let phrase = "";
+        let suggestions = "";
 
         let query = `
           SELECT initDialog, type
@@ -404,6 +397,20 @@ const callChatGPT = async (req, res) => {
             "你是一位專門寫故事給國小學生的編劇。",
             openai
           );
+          suggestions = await gptJson(
+            `劇情：${chatgptResponse} \n ------------ \n 請依據"劇情"提出可能的四個劇情走向，每個劇情走向應該在10個字以內。json 格式如下: 
+            {
+              "suggestions": [
+                "小樂在花園發現隱藏的寶藏。",
+                "遇見神秘的守護者，解開謎題。",
+                "花園是通往異世界的門戶。",
+                "發現花園其實是一個古代遺跡。"
+            }
+            `,
+            "你是一位專門寫故事給國小學生的編劇。",
+            openai
+          );
+          console.log("suggestions: ", suggestions);
           var dallePrompt = await chatGPT(
             `${chatgptResponse} \n------------\n"Please use a single sentence without using commas within 30 words to describe what this image looks like, only include the necessary nouns, verbs, place and scene, as you would explain it to someone who does not have the context of the story. For example, do not use any names and describe what any charachters look like. Provide a single sentence without using commas and like a subject verb object scene sentence. Within 30 words."`,
             "You are a DALL-E prompt engineer.",
@@ -419,6 +426,19 @@ const callChatGPT = async (req, res) => {
           );
           var chatgptResponse = await chatGPT(
             `"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展50字的第二人稱文字小說。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.在劇情結尾問主角接下來的行動\n4.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`,
+            "你是一位專門寫故事給國小學生的編劇。",
+            openai
+          );
+          suggestions = await gptJson(
+            `劇情：${chatgptResponse} \n ------------ \n 請依據"劇情"提出可能的四個劇情走向，每個劇情走向應該在10個字以內。json 格式如下: 
+            {
+              "suggestions": [
+                "小樂在花園發現隱藏的寶藏。",
+                "遇見神秘的守護者，解開謎題。",
+                "花園是通往異世界的門戶。",
+                "發現花園其實是一個古代遺跡。"
+            }
+            `,
             "你是一位專門寫故事給國小學生的編劇。",
             openai
           );
@@ -441,33 +461,22 @@ const callChatGPT = async (req, res) => {
 
         if (type !== "小說" && type !== "") {
           var writeReplyQuery = `
-          INSERT INTO messages(input, reply, imageSrc, storyId, authorId, word, phrase)
-            VALUES('${input}', '${chatgptResponse}', '${downloadUrl}', '${storyId}', '${userId}', '${message_word}', '${message_phrase}')
+          INSERT INTO messages(input, reply, imageSrc, storyId, authorId, word, phrase, suggestions)
+            VALUES('${input}', '${chatgptResponse}', '${downloadUrl}', '${storyId}', '${userId}', '${message_word}', '${message_phrase}', '${suggestions}')
               `;
         } else {
           var writeReplyQuery = `
-          INSERT INTO messages(input, reply, imageSrc, storyId, authorId)
-            VALUES('${input}', '${chatgptResponse}', '${downloadUrl}', '${storyId}', '${userId}')
+          INSERT INTO messages(input, reply, imageSrc, storyId, authorId, suggestions)
+            VALUES('${input}', '${chatgptResponse}', '${downloadUrl}', '${storyId}', '${userId}', '${suggestions}')
               `;
         }
 
         let dbResult = await callDB(writeReplyQuery);
         console.log("DBresult: ", dbResult);
 
-        // 把之前的故事記錄全部抓出來
-        let query2 = `
-        SELECT input, reply, imageSrc
-        FROM messages
-            WHERE(authorId = '${userId}' AND storyId = ${storyId})
-          `;
-        let historyReply = await callDB(query2);
-        // console.log("historyReply: ", historyReply);
-
-        // generate response for api
-        let response = historyReply;
-
-        res.json(response);
-        res.status(200);
+        res.status(200).send({
+          message: "success",
+        });
       }
     }
   } catch (error) {
