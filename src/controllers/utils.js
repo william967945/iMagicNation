@@ -6,11 +6,14 @@ import { v4 as uuidv4 } from "uuid";
 import videoshow from "videoshow";
 import path from "path";
 import musicMetadata from "music-metadata";
+import OpenAI from "openai";
 
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { signInAnonymously } from "firebase/auth";
 
 import { seq, auth } from "../../app.js";
+import { createSpeech } from "./speech.js";
+import { createTranscription } from "./transcription.js";
 
 dotenv.config();
 
@@ -158,57 +161,58 @@ const getBlobImage = async (req, res) => {
   }
 };
 
-const speechApi = async (ssml) => {
-  var data = JSON.stringify({
-    ssml,
-    ttsAudioFormat: "audio-24khz-160kbitrate-mono-mp3",
-    offsetInPlainText: 0,
-    properties: {
-      SpeakTriggerSource: "AccTuningPagePlayButton",
-    },
-  });
-  console.log("speechApi" + data);
+// Microsoft tts start
+// const speechApi = async (ssml) => {
+//   var data = JSON.stringify({
+//     ssml,
+//     ttsAudioFormat: "audio-24khz-160kbitrate-mono-mp3",
+//     offsetInPlainText: 0,
+//     properties: {
+//       SpeakTriggerSource: "AccTuningPagePlayButton",
+//     },
+//   });
+//   console.log("speechApi" + data);
 
-  var config = {
-    method: "post",
-    url: "https://southeastasia.api.speech.microsoft.com/accfreetrial/texttospeech/acc/v3.0-beta1/vcg/speak",
-    responseType: "arraybuffer",
-    headers: {
-      authority: "southeastasia.api.speech.microsoft.com",
-      accept: "*/*",
-      "accept-language": "zh-CN,zh;q=0.9",
-      customvoiceconnectionid: uuidv4(),
-      origin: "https://speech.microsoft.com",
-      "sec-ch-ua":
-        '"Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"',
-      "sec-ch-ua-mobile": "?0",
-      "sec-ch-ua-platform": '"Windows"',
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-site",
-      "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
-      "content-type": "application/json",
-    },
+//   var config = {
+//     method: "post",
+//     url: "https://southeastasia.api.speech.microsoft.com/accfreetrial/texttospeech/acc/v3.0-beta1/vcg/speak",
+//     responseType: "arraybuffer",
+//     headers: {
+//       authority: "southeastasia.api.speech.microsoft.com",
+//       accept: "*/*",
+//       "accept-language": "zh-TW,zh;q=0.9",
+//       customvoiceconnectionid: uuidv4(),
+//       origin: "https://speech.microsoft.com",
+//       "sec-ch-ua":
+//         '"Google Chrome";v="111", "Not(A:Brand";v="8", "Chromium";v="111"',
+//       "sec-ch-ua-mobile": "?0",
+//       "sec-ch-ua-platform": '"Windows"',
+//       "sec-fetch-dest": "empty",
+//       "sec-fetch-mode": "cors",
+//       "sec-fetch-site": "same-site",
+//       "user-agent":
+//         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
+//       "content-type": "application/json",
+//     },
 
-    data: data,
-  };
+//     data: data,
+//   };
 
-  return new Promise((resolve, reject) => {
-    axios(config)
-      .then(function (response) {
-        resolve(response.data);
-      })
-      .catch(function (error) {
-        console.error(error);
-        reject(error);
-      });
-  });
-};
+//   return new Promise((resolve, reject) => {
+//     axios(config)
+//       .then(function (response) {
+//         resolve(response.data);
+//       })
+//       .catch(function (error) {
+//         console.error(error);
+//         reject(error);
+//       });
+//   });
+// };
 
-function sleep() {
-  return new Promise((resolve) => setTimeout(resolve, 3000));
-}
+// function sleep() {
+//   return new Promise((resolve) => setTimeout(resolve, 3000));
+// }
 
 const getVoice = async (str) => {
   let retry = 0;
@@ -217,7 +221,16 @@ const getVoice = async (str) => {
     try {
       console.log("Speech invocation attempt", retry + 1);
       const result = await speechApi(
-        `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xmlns:emo="http://www.w3.org/2009/10/emotionml" version="1.0" xml:lang="en-US"><voice name="zh-CN-YunxiNeural"><mstts:express-as  style="Default" ><prosody rate="45%" pitch="0%">${str}</prosody></mstts:express-as></voice></speak>`
+        `<speak xmlns="http://www.w3.org/2001/10/synthesis" 
+        xmlns:mstts="http://www.w3.org/2001/mstts" 
+        xmlns:emo="http://www.w3.org/2009/10/emotionml" 
+        version="1.0" 
+        xml:lang="en-US">
+        <voice name="zh-TW-YunJheNeural">
+        <mstts:express-as  style="friendly" >
+        <prosody rate="medium" pitch="0%">
+        ${str}
+        </prosody></mstts:express-as></voice></speak>`
       );
       console.log(result);
 
@@ -234,6 +247,8 @@ const getVoice = async (str) => {
   }
   throw new Error(`Speech invocation failed after ${retryCount} retries`); // 重试次数用尽，抛出异常
 };
+// Microsoft tts end
+
 
 const getVideo = async (req, res) => {
   var str = req.body.buffer;
@@ -271,15 +286,33 @@ const getVideo = async (req, res) => {
 
   console.log("WholeStory: ", newWholeStory);
 
-  // let blankQuestion = newWholeStory.indexOf("參考分數");
-  // let wholeStoryWithoutQuestion = newWholeStory.slice(0, blankQuestion);
-  // console.log("WholeStoryWithoutQuestion: ", wholeStoryWithoutQuestion);
-
   const delimiters = ["，", "。", "？", ",", ".", "?", "\n"];
   const maxSize = 300;
   console.log("字数过多，正在对文本切片。。。");
 
-  const inputValue = newWholeStory; // 请替换成您的输入文本
+  // call chatgpt api
+  const configuration = {
+    organization: "org-O0J27zQrydIuKDx8csuyhqgH",
+    apiKey: process.env.OPENAI_API_KEY,
+  };
+  const openai = new OpenAI(configuration);
+
+  // 整理所有message段落故事
+  let concentrateStory = await chatGPT(
+    `"${newWholeStory}"\n------------\n請用400字內，繁體中文，國小二年級的國語程度重新講述上述故事。`,
+    "",
+    openai
+  );
+
+  // const inputValue = "在一片茂密的森林中，有一群熱愛學習的猴子。牠們不僅懂事，還會一起商量如何節省開支，讓大家都能過上好日子。為了照顧牠們飼養的小動物，猴子們決定增加食物供應。"+
+  // "他們要照顧的小動物包括老虎、大便、小雞和一些繽紛色彩的寶可夢。為了解決資源不足，猴子們決定尋找傳說中的「智慧果」，這果子能讓動物變得更聰明。" +
+  // "在尋找智慧果的過程中，猴子們不得不越過彩虹橋，突破天空的限制。每次成功的冒險都被蓋章在地圖上，代表勇敢的探險。智慧果的核芯有奇妙的力量，能幫助牠們解決養育小動物的難題。"+
+  // "作為猴子中的一員，你在猴王的帶領下攀上樹梢，找到了智慧果。果樹旁的魔法藤蔓閃耀著光輝，預示著一場奇幻旅程的開始。你摘下智慧果，利用小型機器將智慧注入食物，為朋友們帶來更多福分。"+
+  // "但大便和寶可夢吃完智慧果後變得聰明，卻無法找到可樂果。你決定用神奇露水幫助牠們，混合了智慧果的精華和你的溫暖心意。這股露水可能讓它們找到失落的可樂果。"+
+  // "然而，猴子蓋住了最後一顆可樂果，剝奪了大便和寶可夢的機會。但突然間，幻影蜜桃的香氣出現，帶來了轉機。你要如何幫助牠們呢？"+
+  // "最終，猴子們以智慧和友情成功說服寶可夢停止破壞地球。整個森林充滿了分享和關懷，每個生命都共同維護家園的和平與安全。"; // 请替换成您的输入文本
+
+  const inputValue = concentrateStory; // 请替换成您的输入文本
   const textHandler = inputValue.split("").reduce(
     (obj, char, index) => {
       obj.buffer.push(char);
@@ -306,34 +339,30 @@ const getVideo = async (req, res) => {
   // 如果需要处理 buffers，您可以在这里添加相应的代码，这里只包含了文本切片部分的代码示例
   // this.currMp3Buffer = Buffer.concat([this.currMp3Buffer, buffers]);
   // let audioFileName = await getVoice(storyId, userId);
-  var allBuffer = Buffer.from("");
-  for (var i = 0; i < tasks.length; i++) {
-    var buffer = await getVoice(tasks[i]);
-    var nodeBuffer = Buffer.from(buffer);
-    allBuffer = Buffer.concat([allBuffer, nodeBuffer]);
-  }
+  
+
+  // var allBuffer = Buffer.from("");
+  // for (var i = 0; i < tasks.length; i++) {
+  //   var buffer = await getVoice(tasks[i]);
+  //   var nodeBuffer = Buffer.from(buffer);
+  //   allBuffer = Buffer.concat([allBuffer, nodeBuffer]);
+  // }
 
   const currTime = new Date().getTime().toString();
   var naming = `${storyId}_${userId}_` + currTime;
 
   const filePath = path.join("./", naming + ".mp3");
-  //下載音檔
-  fs.writeFileSync(path.resolve(filePath), allBuffer);
-  console.log("All Buffer: ", allBuffer);
+  //下載音檔 (Microsoft TTS)
+  // fs.writeFileSync(path.resolve(filePath), allBuffer);
+  // console.log("All Buffer: ", allBuffer);
 
-  // console.log("AudioFileName: ", audioFileName)
+  // OpenAI TTS
+  let allBuffer = await createSpeech(concentrateStory, filePath)
+
+  // OpenAI 音檔轉字幕
+  await createTranscription(filePath, naming)
 
   // 下載圖片
-  // 把之前的故事記錄全部抓出來
-
-  // let query3 = `
-  // SELECT initImage
-  // FROM stories
-  // WHERE(storyId = ${storyId})
-  // `
-  // let initImage = await callDB(query4);
-  // console.log("InitImage: ", initImage);
-
   delete dbResponse[0].type;
   delete dbResponse[0].initDialog;
   dbResponse[0]["imageSrc"] = dbResponse[0]["initImage"];
@@ -392,7 +421,7 @@ const getVideo = async (req, res) => {
   var videoOptions = {
     fps: 24,
     // 根據mp3長度除圖片數量決定每張圖持續時間
-    loop: duration / 6 + 3, // seconds
+    loop: duration / 6 + 1, // seconds
     transition: true,
     transitionDuration: 1, // seconds
     videoBitrate: 1024,
@@ -400,12 +429,18 @@ const getVideo = async (req, res) => {
     size: "640x?",
     audioBitrate: "128k",
     audioChannels: 2,
+    audio: {
+      fade: false, // 禁用聲音漸入漸出
+      fadeIn: 0, // 設置聲音漸入時間（毫秒）
+      fadeOut: 0, // 設置聲音漸出時間（毫秒）
+    },
     format: "mp4",
     pixelFormat: "yuv420p",
   };
 
   videoshow(imagePath, videoOptions)
     .audio(`${naming}.mp3`)
+    .subtitles(`${naming}.srt`)
     .save(`${naming}.mp4`)
     .on("start", function (command) {
       console.log("ffmpeg process started:", command);
@@ -458,6 +493,7 @@ const getVideo = async (req, res) => {
           // delete mp3, mp4
           fs.unlinkSync(`${naming}.mp3`);
           fs.unlinkSync(`${naming}.mp4`);
+          fs.unlinkSync(`${naming}.srt`);
 
           res.json(response);
           res.status(200);
