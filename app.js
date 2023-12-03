@@ -35,13 +35,13 @@ const seq = new Sequelize(process.env.MYSQL_URL); // Example for sqlite
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyBGHjsmgCOFzkGd-BHfhkeUTJ0dlzLHIdQ",
-  authDomain: "quant-5b96e.firebaseapp.com",
-  projectId: "quant-5b96e",
-  storageBucket: "quant-5b96e.appspot.com",
-  messagingSenderId: "187727174752",
-  appId: "1:187727174752:web:16a43c904e3a2d2582b705",
-  measurementId: "G-QLJ6FB0NN2"
+  apiKey: `${process.env.FIREBASE_API_KEY}`,
+  authDomain: `${process.env.FIREBASE_AUTH_DOMAIN}`,
+  projectId: `${process.env.FIREBASE_PROJECT_ID}`,
+  storageBucket: `${process.env.FIREBASE_STORAGEBUCKET}`,
+  messagingSenderId: `${process.env.FIREBASE_MESSAGING_SENDER_ID}`,
+  appId: `${process.env.FIREBASE_APP_ID}`,
+  measurementId: `${process.env.FIREBASE_MEASUREMENT_ID}`
 };
 
 // Initialize Firebase
