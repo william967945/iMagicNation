@@ -3,6 +3,8 @@
 
 This project utilizes the GPT-4 and DALLE3 APIs to create a story model specifically tailored for elementary school children. Through this model, children can easily read and receive intelligent responses, enhancing their learning and reading experiences.
 
+Project URL: https://imagicnation.vercel.app/
+
 ### Technical Details
 
 - **GPT-4 API:** Utilize the GPT-4 API to generate story text suitable for elementary school children, ensuring content is aligned with their age group to spark interest in learning.
