@@ -15,4 +15,9 @@ This project utilizes the GPT-4 and DALLE3 APIs to create a story model specific
 
 
 ---
+### Completion of the story 
+https://github.com/william967945/iMagicNation/assets/74392754/f699ed37-35fc-4bfa-9f55-de9252070de6
+
+
+---
 **Note:** Ensure compliance with the usage policies of relevant APIs and tools, and adhere to legal regulations while using this project.
