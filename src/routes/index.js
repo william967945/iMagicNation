@@ -13,6 +13,7 @@ import {
   inquireDict
 } from "../controllers/story.js";
 import { getBlobImage, getVideo, getVoice } from "../controllers/utils.js";
+import { createSpeech } from "../controllers/speech.js";
 
 var router = Router();
 
@@ -73,8 +74,11 @@ router.get("/dalle/blob", getBlobImage)
 // 評分系統測試
 router.post("/score/test", scoreTest)
 
-// 聲音生成
+// 聲音生成(Microsoft tts)
 router.post("/voice/test", getVoice)
+
+// 聲音生成(OpenAI)
+router.post("/voice/test/openai", createSpeech)
 
 // 影片匯出
 router.post("/video/test", getVideo)
