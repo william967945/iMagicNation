@@ -130,12 +130,12 @@ const callChatGPT = async (req, res) => {
             let phrasesWithComma = phrase_array.join(",");
 
             var endingQuestion = await chatGPT(
-              `${wholeStory}我:${input}\n------------\n請用繁體中文以大約50字上下，根據上述的劇情完成故事結尾`,
+              `${wholeStory}我:${input}\n------------\n請用繁體中文以大約50字上下，根據上述的劇情完成故事結尾。必須使用適合國小二年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`,
               "你是一位專門寫故事給國小學生的編劇。",
               openai
             );
             questions = await gptJson(
-              `請用繁體中文利用提供的國字與詞語提出三個填空題，內容須滿足以下要求:\n\n1. 填空題的出題形式為: 三題填空題"一定要使用"第二點列出的國字、第三點的詞語出題，並將出現的國字與詞語挖空讓學生填寫。每題只有一個填空。填空題不需要跟上述劇情相關。最後不需要顯示答案。\n\n2. 國字: ${wordsWithComma}\n\n3. 詞語: ${phrasesWithComma}\n\n4. 在出填空題時須使用適合國小六年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子，且句子要符合大眾常識，符合中文語法。 JSON 結構如下 {
+              `請用繁體中文利用提供的國字與詞語提出三個填空題，內容須滿足以下要求:\n\n1. 填空題的出題形式為: 三題填空題"一定要使用"第二點列出的國字、第三點的詞語出題，並將出現的國字與詞語挖空讓學生填寫。每題只有一個填空。填空題不需要跟上述劇情相關。最後不需要顯示答案。\n\n2. 國字: ${wordsWithComma}\n\n3. 詞語: ${phrasesWithComma}\n\n4. 在出填空題時須使用適合國小二年級學生程度的詞彙及句子進行出題，不能有語意艱澀難懂或違反字詞原本意思的句子，且句子要符合大眾常識，符合中文語法。 JSON 結構如下 {
                 "words": "",
                 "phrases": "",
                 "question1": "",
@@ -155,7 +155,7 @@ const callChatGPT = async (req, res) => {
             );
           } else {
             var endingQuestion = await chatGPT(
-              `${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出一個道德觀念題。`,
+              `${wholeStory}我:${input}\n------------\n請用繁體中文根據上述的劇情完成50字的故事結尾並提出一個道德觀念題。必須使用適合國小二年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`,
               "你是一位專門寫故事給國小學生的編劇。",
               openai
             );
@@ -393,7 +393,7 @@ const callChatGPT = async (req, res) => {
             openai
           );
           var chatgptResponse = await chatGPT(
-            `"${previousReply}我:${input}"\n------------\n請用繁體中文根據上述的故事內容續寫50字的第二人稱文字劇情。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.必須使用到國字「${finalWordWithoutFirstComma}」\n4.必須使用到詞語「${finalPhraseWithoutFirstComma}」\n5.在劇情結尾問主角接下來的行動\n6.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`,
+            `"${previousReply}我:${input}"\n------------\n請用繁體中文根據上述的故事內容續寫50字的第二人稱文字劇情。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.必須使用到國字「${finalWordWithoutFirstComma}」\n4.必須使用到詞語「${finalPhraseWithoutFirstComma}」\n5.在劇情結尾問主角接下來的行動\n6.使用適合國小二年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`,
             "你是一位專門寫故事給國小學生的編劇。",
             openai
           );
@@ -425,7 +425,7 @@ const callChatGPT = async (req, res) => {
             openai
           );
           var chatgptResponse = await chatGPT(
-            `"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展50字的第二人稱文字小說。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.在劇情結尾問主角接下來的行動\n4.使用適合國小六年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`,
+            `"${previousReply}\n我:${input}"\n------------\n請用繁體中文根據上述的故事內容繼續發展50字的第二人稱文字小說。續寫的內容須滿足以下要求: \n\n1.故事內容須和「${input}」相關\n2.必須包含指定名詞「${element}」\n3.在劇情結尾問主角接下來的行動\n4.使用適合國小二年級學生程度的詞彙及句子，不能有語意艱澀難懂或違反字詞原本意思的句子`,
             "你是一位專門寫故事給國小學生的編劇。",
             openai
           );
