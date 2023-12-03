@@ -17,6 +17,10 @@ Project URL: https://imagicnation.vercel.app/
 
 
 ---
+### Demo Video
+https://github.com/william967945/iMagicNation/assets/74392754/66daa8c7-4d6a-4b88-99a8-ab11cc6ee1df
+
+
 ### Completion of the story 
 https://github.com/william967945/iMagicNation/assets/74392754/f699ed37-35fc-4bfa-9f55-de9252070de6
 
